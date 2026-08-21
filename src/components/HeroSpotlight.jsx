@@ -39,7 +39,7 @@ export default function HeroSpotlight({
 
   return (
     <div 
-      className="relative w-full rounded-3xl overflow-hidden mb-12 shadow-2xl border border-slate-800/80 bg-slate-950 group select-none min-h-[480px] sm:min-h-[540px] flex items-end"
+      className="relative w-full rounded-3xl overflow-hidden mb-10 shadow-2xl border border-orange-500/30 bg-[#0c0d14] group select-none min-h-[480px] sm:min-h-[540px] flex items-end"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -53,39 +53,39 @@ export default function HeroSpotlight({
             className="w-full h-full object-cover object-center animate-fadeIn transform transition-transform duration-1000 scale-100 group-hover:scale-105 filter brightness-[0.75]"
           />
           {/* التدرجات اللونية الفاخرة للظلال والدمج */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"></div>
-          <div className={`absolute inset-0 ${t.dir === 'rtl' ? 'bg-gradient-to-l from-transparent via-slate-950/70 to-slate-950' : 'bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent'}`}></div>
-          <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-slate-950/80 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#090a0f] via-[#090a0f]/60 to-transparent"></div>
+          <div className={`absolute inset-0 ${t.dir === 'rtl' ? 'bg-gradient-to-l from-transparent via-[#090a0f]/75 to-[#090a0f]' : 'bg-gradient-to-r from-[#090a0f] via-[#090a0f]/75 to-transparent'}`}></div>
+          <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#090a0f]/80 to-transparent"></div>
         </div>
       )}
 
-      {/* المحتوى والنصوص الرئيسية للبطل */}
+      {/* المحتوى والنصوص الرئيسية */}
       <div className="relative z-10 p-6 sm:p-10 md:p-14 max-w-3xl space-y-4">
         {/* الشارات العلوية */}
         <div className="flex flex-wrap items-center gap-2.5 text-xs font-black">
-          <span className="bg-gradient-to-r from-red-600 to-amber-500 text-white px-3 py-1 rounded-xl shadow-lg shadow-red-600/40 uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+          <span className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 font-black px-3.5 py-1 rounded-xl shadow-lg shadow-orange-500/30 uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
             <span>🔥</span>
             <span>{t.sections.trending}</span>
           </span>
 
-          <span className="bg-slate-900/90 text-amber-400 px-3 py-1 rounded-xl border border-amber-400/30 backdrop-blur-md flex items-center gap-1">
+          <span className="bg-slate-900/90 text-amber-300 px-3 py-1 rounded-xl border border-amber-400/30 backdrop-blur-md flex items-center gap-1 font-extrabold">
             ⭐ {currentItem.vote_average ? currentItem.vote_average.toFixed(1) : '9.0'}
           </span>
 
-          <span className="bg-slate-900/90 text-gray-200 px-3 py-1 rounded-xl border border-slate-700/60 backdrop-blur-md">
+          <span className="bg-slate-900/90 text-white px-3 py-1 rounded-xl border border-slate-700/60 backdrop-blur-md">
             📅 {year}
           </span>
 
-          <span className="bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-xl font-bold backdrop-blur-md">
+          <span className="bg-orange-500/20 text-orange-300 border border-orange-400/40 px-2.5 py-1 rounded-xl font-bold backdrop-blur-md">
             4K Ultra HD
           </span>
 
-          <span className={`px-2.5 py-1 rounded-xl text-white font-bold backdrop-blur-md ${isTV ? 'bg-indigo-600/80' : 'bg-red-600/80'}`}>
+          <span className={`px-2.5 py-1 rounded-xl text-white font-bold backdrop-blur-md ${isTV ? 'bg-indigo-600/80' : 'bg-orange-600/80'}`}>
             {isTV ? t.tvBadge : t.movieBadge}
           </span>
         </div>
 
-        {/* عنوان العمل بحجم سينمائي ضخم */}
+        {/* عنوان العمل بحجم سينمائي ضخم بلون أبيض ناصع */}
         <h1 
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-2xl line-clamp-2"
         >
@@ -93,16 +93,16 @@ export default function HeroSpotlight({
         </h1>
 
         {/* ملخص القصة */}
-        <p className="text-gray-300 text-xs sm:text-sm md:text-base line-clamp-3 max-w-2xl leading-relaxed drop-shadow">
+        <p className="text-gray-200 text-xs sm:text-sm md:text-base line-clamp-3 max-w-2xl leading-relaxed drop-shadow">
           {currentItem.overview || t.clickForDetails}
         </p>
 
         {/* أزرار الإجراءات التفاعلية */}
         <div className="flex flex-wrap items-center gap-3 pt-3">
-          {/* زر المشاهدة الرئيسي مع توهج نبضي */}
+          {/* زر المشاهدة الرئيسي مع توهج برتقالي نابض */}
           <button
             onClick={() => onSelectMedia(currentItem)}
-            className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:opacity-95 text-white font-black px-6 sm:px-8 py-3.5 rounded-2xl shadow-xl shadow-red-600/40 flex items-center gap-2.5 text-sm sm:text-base transition-all transform hover:scale-105 active:scale-95 glow-btn"
+            className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:opacity-95 text-white font-black px-6 sm:px-8 py-3.5 rounded-2xl shadow-xl shadow-orange-500/40 flex items-center gap-2.5 text-sm sm:text-base transition-all transform hover:scale-105 active:scale-95 glow-btn border border-orange-300/40"
           >
             <span className="text-lg">▶️</span>
             <span>{t.watchNow}</span>
@@ -113,7 +113,7 @@ export default function HeroSpotlight({
             onClick={() => onToggleFavorite(currentItem)}
             className={`px-5 py-3.5 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 backdrop-blur-md border shadow-lg ${
               isFavorite
-                ? 'bg-red-600/90 border-red-500 text-white shadow-red-600/30'
+                ? 'bg-orange-600/90 border-orange-400 text-white shadow-orange-600/40'
                 : 'bg-slate-900/80 hover:bg-slate-800/90 border-slate-700/80 text-gray-200 hover:text-white'
             }`}
           >
@@ -124,7 +124,7 @@ export default function HeroSpotlight({
           {/* زر التفاصيل */}
           <button
             onClick={() => onSelectMedia(currentItem)}
-            className="px-4 py-3.5 bg-slate-900/80 hover:bg-slate-800/90 border border-slate-700/80 rounded-2xl text-xs sm:text-sm font-bold text-gray-300 hover:text-white backdrop-blur-md transition-all hidden sm:flex items-center gap-2"
+            className="px-4 py-3.5 bg-slate-900/80 hover:bg-slate-800/90 border border-slate-700/80 rounded-2xl text-xs sm:text-sm font-bold text-gray-200 hover:text-white backdrop-blur-md transition-all hidden sm:flex items-center gap-2"
           >
             <span>ℹ️</span>
             <span>تفاصيل العمل</span>
@@ -132,12 +132,12 @@ export default function HeroSpotlight({
         </div>
       </div>
 
-      {/* شريط المصغرات الجانبي/السفلي للتبديل السريع بين الأعمال المميزة */}
-      <div className={`absolute z-20 bottom-6 ${t.dir === 'rtl' ? 'left-6' : 'right-6'} hidden md:flex items-center gap-2.5 bg-slate-950/80 backdrop-blur-md p-2 rounded-2xl border border-slate-800/80 shadow-2xl`}>
+      {/* شريط المصغرات الجانبي */}
+      <div className={`absolute z-20 bottom-6 ${t.dir === 'rtl' ? 'left-6' : 'right-6'} hidden md:flex items-center gap-2.5 bg-slate-950/80 backdrop-blur-md p-2 rounded-2xl border border-orange-500/30 shadow-2xl`}>
         {featuredItems.map((item, idx) => {
           const isActive = idx === currentIndex;
           const thumbUrl = item.poster_path 
-            ? `https://image.tmdb.org/t/p/w185${item.poster_path}`
+            ? `https://image.tmdb.org/t/p/w185${item.poster_path}` 
             : '';
           return (
             <button
@@ -145,7 +145,7 @@ export default function HeroSpotlight({
               onClick={() => setCurrentIndex(idx)}
               className={`relative w-12 h-16 rounded-xl overflow-hidden transition-all duration-300 shrink-0 ${
                 isActive 
-                  ? 'ring-2 ring-red-500 scale-110 shadow-lg shadow-red-600/50' 
+                  ? 'ring-2 ring-orange-500 scale-110 shadow-lg shadow-orange-500/50' 
                   : 'opacity-50 hover:opacity-100'
               }`}
             >
@@ -157,7 +157,7 @@ export default function HeroSpotlight({
                 />
               )}
               {isActive && (
-                <div className="absolute inset-0 bg-red-600/20"></div>
+                <div className="absolute inset-0 bg-orange-500/20"></div>
               )}
             </button>
           );
@@ -167,7 +167,7 @@ export default function HeroSpotlight({
       {/* أسهم التنقل اليدوي */}
       <button
         onClick={() => setCurrentIndex((prev) => (prev - 1 + featuredItems.length) % featuredItems.length)}
-        className={`absolute top-1/2 -translate-y-1/2 ${t.dir === 'rtl' ? 'right-3' : 'left-3'} z-20 w-10 h-10 rounded-full bg-slate-950/70 hover:bg-red-600 text-white backdrop-blur-md border border-slate-700/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-xl`}
+        className={`absolute top-1/2 -translate-y-1/2 ${t.dir === 'rtl' ? 'right-3' : 'left-3'} z-20 w-10 h-10 rounded-full bg-slate-950/70 hover:bg-orange-600 text-white backdrop-blur-md border border-slate-700/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-xl`}
         aria-label="Previous"
       >
         {t.dir === 'rtl' ? '❯' : '❮'}
@@ -175,7 +175,7 @@ export default function HeroSpotlight({
 
       <button
         onClick={() => setCurrentIndex((prev) => (prev + 1) % featuredItems.length)}
-        className={`absolute top-1/2 -translate-y-1/2 ${t.dir === 'rtl' ? 'left-3' : 'right-3'} z-20 w-10 h-10 rounded-full bg-slate-950/70 hover:bg-red-600 text-white backdrop-blur-md border border-slate-700/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-xl`}
+        className={`absolute top-1/2 -translate-y-1/2 ${t.dir === 'rtl' ? 'left-3' : 'right-3'} z-20 w-10 h-10 rounded-full bg-slate-950/70 hover:bg-orange-600 text-white backdrop-blur-md border border-slate-700/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-xl`}
         aria-label="Next"
       >
         {t.dir === 'rtl' ? '❮' : '❯'}

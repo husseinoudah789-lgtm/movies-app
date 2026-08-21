@@ -56,10 +56,10 @@ export default function UserProfileModal({
     : '2026';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
       <div className="fixed inset-0" onClick={onClose}></div>
 
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 overflow-hidden">
+      <div className="relative w-full max-w-lg bg-[#0f111a] border border-orange-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 overflow-hidden">
         {/* زر الإغلاق */}
         <button
           onClick={onClose}
@@ -70,14 +70,14 @@ export default function UserProfileModal({
 
         {/* رأس الملف الشخصي */}
         <div className="flex flex-col sm:flex-row items-center gap-5 pb-6 border-b border-slate-800">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center text-4xl shadow-xl shadow-red-600/30 ring-4 ring-slate-800">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-orange-600 via-amber-500 to-white flex items-center justify-center text-4xl shadow-xl shadow-orange-600/30 ring-4 ring-slate-800">
             {isEditing ? selectedAvatar : currentUser.avatar || '🍿'}
           </div>
 
           <div className="text-center sm:text-right flex-1">
             <h2 className="text-2xl font-black text-white flex items-center justify-center sm:justify-start gap-2">
               <span>{currentUser.name}</span>
-              <span className="bg-red-600/20 text-red-400 text-xs px-2.5 py-0.5 rounded-full border border-red-500/30">VIP</span>
+              <span className="bg-orange-500/20 text-orange-300 text-xs px-2.5 py-0.5 rounded-full border border-orange-500/40 font-bold">VIP</span>
             </h2>
             <p className="text-xs text-gray-400 mt-1 font-mono">{currentUser.email}</p>
             <p className="text-[11px] text-gray-500 mt-1">
@@ -98,20 +98,20 @@ export default function UserProfileModal({
           <div className="space-y-6 pt-6">
             {/* بطاقات الإحصائيات */}
             <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-3">
                 📊 {t.stats}
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 flex items-center gap-3">
-                  <span className="text-3xl p-2 rounded-xl bg-red-500/10 text-red-500">❤️</span>
+                <div className="bg-slate-950/80 p-4 rounded-2xl border border-orange-500/20 flex items-center gap-3">
+                  <span className="text-3xl p-2 rounded-xl bg-orange-500/10 text-orange-400">❤️</span>
                   <div>
                     <p className="text-xl font-black text-white">{watchlistCount}</p>
                     <p className="text-xs text-gray-400 font-medium">{t.totalFavorites}</p>
                   </div>
                 </div>
 
-                <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 flex items-center gap-3">
-                  <span className="text-3xl p-2 rounded-xl bg-amber-500/10 text-amber-500">⏱️</span>
+                <div className="bg-slate-950/80 p-4 rounded-2xl border border-orange-500/20 flex items-center gap-3">
+                  <span className="text-3xl p-2 rounded-xl bg-amber-500/10 text-amber-400">⏱️</span>
                   <div>
                     <p className="text-xl font-black text-white">{historyCount}</p>
                     <p className="text-xs text-gray-400 font-medium">{t.totalWatched}</p>
@@ -128,7 +128,7 @@ export default function UserProfileModal({
                   setSelectedAvatar(currentUser.avatar || '🍿');
                   setIsEditing(true);
                 }}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all border border-slate-700 shadow"
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-400 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-orange-500/20"
               >
                 <span>✏️</span>
                 <span>{t.editProfile}</span>
@@ -152,7 +152,7 @@ export default function UserProfileModal({
                       onClearWatchlist && onClearWatchlist();
                     }
                   }}
-                  className="bg-slate-950 hover:bg-slate-800 text-gray-400 hover:text-red-400 border border-slate-800 py-2 rounded-xl text-[11px] font-bold transition-all"
+                  className="bg-slate-950 hover:bg-slate-800 text-gray-400 hover:text-orange-400 border border-slate-800 py-2 rounded-xl text-[11px] font-bold transition-all"
                 >
                   💔 {t.clearWatchlist}
                 </button>
@@ -163,7 +163,7 @@ export default function UserProfileModal({
                   onLogout();
                   onClose();
                 }}
-                className="w-full bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all mt-4"
+                className="w-full bg-slate-950 hover:bg-orange-600/20 text-orange-400 hover:text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all border border-orange-500/30 mt-2"
               >
                 <span>🚪</span>
                 <span>{t.logout}</span>
@@ -171,31 +171,31 @@ export default function UserProfileModal({
             </div>
           </div>
         ) : (
-          /* وضع تعديل الملف الشخصي */
-          <form onSubmit={handleSave} className="space-y-4 pt-6 animate-fadeIn">
+          /* وضع التعديل */
+          <form onSubmit={handleSave} className="space-y-4 pt-6">
             <div>
               <label className="block text-xs font-bold text-gray-300 mb-1">{t.name}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-orange-500 transition-all"
                 required
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-300 mb-1.5">{t.chooseAvatar}</label>
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
                 {AVATARS.map((av) => (
                   <button
                     key={av}
                     type="button"
                     onClick={() => setSelectedAvatar(av)}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-all ${
+                    className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center shrink-0 transition-all ${
                       selectedAvatar === av
-                        ? 'bg-red-600 scale-110 shadow-lg shadow-red-600/40 border border-white/20'
-                        : 'bg-slate-800 hover:bg-slate-700'
+                        ? 'bg-gradient-to-r from-orange-600 to-amber-500 border-2 border-white scale-110 shadow-md'
+                        : 'bg-slate-950 border border-slate-800 hover:bg-slate-800'
                     }`}
                   >
                     {av}
@@ -204,19 +204,19 @@ export default function UserProfileModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-4">
+            <div className="flex items-center gap-2 pt-3">
               <button
                 type="submit"
-                className="flex-1 bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition-all text-xs"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-bold text-xs shadow-lg shadow-orange-500/30 transition-all"
               >
-                💾 {t.saveChanges}
+                {t.saveChanges}
               </button>
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-xl font-bold text-xs transition-all"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-gray-300 text-xs font-bold transition-all"
               >
-                ✕ إلغاء
+                إلغاء
               </button>
             </div>
           </form>

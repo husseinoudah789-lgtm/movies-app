@@ -268,15 +268,15 @@ function App() {
 
   return (
     <div 
-      className="min-h-screen bg-[#030712] text-slate-100 font-sans selection:bg-red-600 selection:text-white transition-all duration-300 relative overflow-x-hidden" 
+      className="min-h-screen bg-[#090a0f] text-white font-sans selection:bg-orange-500 selection:text-white transition-all duration-300 relative overflow-x-hidden" 
       dir={t.dir}
     >
-      {/* خلفيات التوهج المحيطي */}
-      <div className="fixed top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full filter blur-[140px] pointer-events-none -z-10"></div>
-      <div className="fixed top-1/3 right-10 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[140px] pointer-events-none -z-10"></div>
-      <div className="fixed bottom-10 left-10 w-96 h-96 bg-indigo-600/10 rounded-full filter blur-[160px] pointer-events-none -z-10"></div>
+      {/* خلفيات التوهج المحيطي البرتقالية الفاخرة */}
+      <div className="fixed top-0 left-1/4 w-96 h-96 bg-orange-600/15 rounded-full filter blur-[150px] pointer-events-none -z-10"></div>
+      <div className="fixed top-1/3 right-10 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[150px] pointer-events-none -z-10"></div>
+      <div className="fixed bottom-10 left-10 w-96 h-96 bg-orange-700/10 rounded-full filter blur-[160px] pointer-events-none -z-10"></div>
 
-      {/* شريط التنقل العلوي مع أداة المشاهدة النظيفة لجميع الأعمال */}
+      {/* شريط التنقل العلوي بالثيم البرتقالي والأبيض */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -298,12 +298,12 @@ function App() {
         {/* حالة البحث */}
         {searchQuery ? (
           <section className="space-y-6 animate-fadeIn">
-            <div className="bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl">
+            <div className="bg-[#0f111a]/80 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-orange-500/30 shadow-2xl">
               <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
                 <span className="text-3xl">🔍</span>
-                <span>{t.searchResultsFor} <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400">"{searchQuery}"</span></span>
+                <span>{t.searchResultsFor} <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">"{searchQuery}"</span></span>
               </h2>
-              <p className="text-gray-400 text-xs sm:text-sm mt-1.5 font-medium">
+              <p className="text-gray-300 text-xs sm:text-sm mt-1.5 font-medium">
                 {searchResults.length} {t.foundResults}
               </p>
             </div>
@@ -323,9 +323,9 @@ function App() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-24 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-800/80 space-y-3">
+              <div className="text-center py-24 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-800 space-y-3">
                 <span className="text-6xl inline-block animate-bounce">🧐</span>
-                <p className="text-gray-400 text-lg font-bold">{t.noResults}</p>
+                <p className="text-gray-300 text-lg font-bold">{t.noResults}</p>
               </div>
             )}
           </section>
@@ -334,10 +334,10 @@ function App() {
           loading ? (
             <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
               <div className="relative">
-                <div className="w-20 h-20 rounded-full border-4 border-slate-800 border-t-red-500 animate-spin"></div>
+                <div className="w-20 h-20 rounded-full border-4 border-slate-800 border-t-orange-500 animate-spin"></div>
                 <span className="absolute inset-0 flex items-center justify-center text-2xl">🍿</span>
               </div>
-              <p className="text-gray-400 text-sm font-bold animate-pulse">{t.loading}</p>
+              <p className="text-orange-400 text-sm font-bold animate-pulse">{t.loading}</p>
             </div>
           ) : (
             <div className="space-y-10 animate-fadeIn">
@@ -359,7 +359,7 @@ function App() {
                       const el = document.getElementById(`section-${sec.id}`);
                       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }}
-                    className="px-3.5 py-1.5 rounded-full text-xs font-black whitespace-nowrap bg-slate-900/80 hover:bg-slate-800 text-gray-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all flex items-center gap-1.5 shrink-0 shadow"
+                    className="px-3.5 py-1.5 rounded-full text-xs font-black whitespace-nowrap bg-[#0f111a]/90 hover:bg-orange-500/20 text-gray-200 hover:text-white border border-orange-500/20 hover:border-orange-500/50 transition-all flex items-center gap-1.5 shrink-0 shadow"
                   >
                     <span>{sec.icon}</span>
                     <span className="whitespace-nowrap">{sec.title.split(' ')[0]} {sec.title.split(' ')[1] || ''}</span>
@@ -475,17 +475,17 @@ function App() {
       />
 
       {/* Footer الفاخر */}
-      <footer className="mt-24 border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-xl py-10 text-center text-xs sm:text-sm text-gray-500 relative">
+      <footer className="mt-24 border-t border-orange-500/20 bg-[#090a0f]/90 backdrop-blur-xl py-10 text-center text-xs sm:text-sm text-gray-400 relative">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🍿</span>
-            <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 text-base">
+            <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-white text-base">
               {t.appName}
             </span>
           </div>
-          <p className="text-gray-400">{t.footerText}</p>
-          <div className="flex items-center gap-4 text-gray-400 text-xs">
-            <span>🛡️ أداة حذف المشاهد غير اللائقة مفعلة لجميع الأعمال</span>
+          <p className="text-gray-300">{t.footerText}</p>
+          <div className="flex items-center gap-4 text-orange-400 text-xs">
+            <span>🛡️ وضع المشاهدة النظيفة</span>
             <span>•</span>
             <span>4K Ultra HD</span>
             <span>•</span>

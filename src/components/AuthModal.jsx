@@ -61,24 +61,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
       );
 
       if (!user) {
-        // إنشاء حساب تجريبي فوري للمستخدم إذا لم يكن مسجلاً
-        const demoUser = {
-          id: Date.now().toString(),
-          name: email.split('@')[0] || 'عضو سينما بلس',
-          email: email.trim(),
-          password,
-          avatar: '🍿',
-          joinedDate: new Date().toISOString()
-        };
-        storedUsers.push(demoUser);
-        localStorage.setItem('cinema_plus_users', JSON.stringify(storedUsers));
-        localStorage.setItem('cinema_plus_current_user', JSON.stringify(demoUser));
-        
-        setSuccessMsg(t.loginSuccess);
-        setTimeout(() => {
-          onAuthSuccess(demoUser);
-          onClose();
-        }, 700);
+        setErrorMsg(appLang === 'ar' ? 'بيانات الدخول غير صحيحة، يرجى التأكد' : 'Invalid email or password');
         return;
       }
 
@@ -109,10 +92,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
       <div className="fixed inset-0" onClick={onClose}></div>
 
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-10">
+      <div className="relative w-full max-w-md bg-[#0f111a] border border-orange-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl z-10">
         {/* زر الإغلاق */}
         <button
           onClick={onClose}
@@ -124,20 +107,20 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
         {/* رأس النافذة */}
         <div className="text-center mb-5">
           <div className="text-4xl mb-2 animate-bounce">{selectedAvatar}</div>
-          <h2 className="text-2xl font-black text-white">
+          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-white">
             {mode === 'login' ? t.login : t.register}
           </h2>
           <p className="text-gray-400 text-xs mt-1">{t.appTagline}</p>
         </div>
 
         {/* التبديل بين تسجيل الدخول وإنشاء حساب */}
-        <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 mb-5">
+        <div className="flex bg-slate-950 p-1 rounded-xl border border-orange-500/20 mb-5">
           <button
             type="button"
             onClick={() => { setMode('login'); setErrorMsg(''); }}
             className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
               mode === 'login'
-                ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
+                ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-600/30'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -148,7 +131,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
             onClick={() => { setMode('register'); setErrorMsg(''); }}
             className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
               mode === 'register'
-                ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
+                ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-600/30'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -158,7 +141,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
 
         {/* الرسائل التنبيهية */}
         {errorMsg && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2 rounded-xl text-xs font-bold mb-4 text-center">
+          <div className="bg-orange-500/10 border border-orange-500/30 text-orange-400 px-4 py-2 rounded-xl text-xs font-bold mb-4 text-center">
             {errorMsg}
           </div>
         )}
@@ -178,7 +161,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="أحمد محمد"
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
                 required
               />
             </div>
@@ -191,7 +174,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="user@example.com"
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
               required
             />
           </div>
@@ -204,7 +187,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
                 required
               />
               <button
@@ -221,16 +204,16 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
           {mode === 'register' && (
             <div>
               <label className="block text-xs font-bold text-gray-300 mb-1.5">{t.chooseAvatar}</label>
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
                 {AVATARS.map((av) => (
                   <button
                     key={av}
                     type="button"
                     onClick={() => setSelectedAvatar(av)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all ${
+                    className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center shrink-0 transition-all ${
                       selectedAvatar === av
-                        ? 'bg-red-600 scale-110 shadow-lg shadow-red-600/40 border border-white/20'
-                        : 'bg-slate-800 hover:bg-slate-700'
+                        ? 'bg-gradient-to-r from-orange-600 to-amber-500 border-2 border-white scale-110 shadow-md'
+                        : 'bg-slate-950 border border-slate-800 hover:bg-slate-800'
                     }`}
                   >
                     {av}
@@ -240,50 +223,25 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, appLang = 'a
             </div>
           )}
 
+          {/* زر التأكيد */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-95 text-white font-black py-3 rounded-xl shadow-lg shadow-red-600/30 transition-all text-xs sm:text-sm mt-2 active:scale-95"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-400 text-white font-black text-sm shadow-xl shadow-orange-500/30 transition-all active:scale-95 border border-orange-400/30"
           >
             {mode === 'login' ? t.login : t.register}
           </button>
         </form>
 
-        {/* زر الدخول السريع للتجربة */}
-        <div className="mt-4 pt-4 border-t border-slate-800/80">
+        {/* زر الدخول التجريبي السريع */}
+        <div className="mt-4 pt-4 border-t border-slate-800 text-center">
           <button
             type="button"
             onClick={handleQuickDemoLogin}
-            className="w-full bg-slate-950 hover:bg-slate-800 text-amber-400 hover:text-amber-300 border border-amber-500/20 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow"
+            className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-orange-500/10 text-orange-400 hover:text-white border border-orange-500/30 text-xs font-bold transition-all flex items-center justify-center gap-2"
           >
             <span>{t.quickDemo}</span>
           </button>
         </div>
-
-        {/* التبديل السريع أسفل النموذج */}
-        <div className="text-center mt-4 text-xs text-gray-400">
-          {mode === 'login' ? (
-            <p>
-              {t.dontHaveAccount}{' '}
-              <button
-                onClick={() => { setMode('register'); setErrorMsg(''); }}
-                className="text-red-400 font-bold hover:underline"
-              >
-                {t.register}
-              </button>
-            </p>
-          ) : (
-            <p>
-              {t.alreadyHaveAccount}{' '}
-              <button
-                onClick={() => { setMode('login'); setErrorMsg(''); }}
-                className="text-red-400 font-bold hover:underline"
-              >
-                {t.login}
-              </button>
-            </p>
-          )}
-        </div>
-
       </div>
     </div>
   );

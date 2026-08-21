@@ -22,7 +22,7 @@ export default function Navbar({
   const [categoriesModalOpen, setCategoriesModalOpen] = useState(false);
   const t = translations[appLang] || translations.ar;
 
-  // روابط التنقل الرئيسية العلوية (مختصرة وأنيقة لا تنقسم)
+  // روابط التنقل الرئيسية العلوية
   const navTabs = [
     { id: 'home', label: t.home, icon: '🏠' },
     { id: 'arabic', label: t.arabic, icon: '🇪🇬' },
@@ -68,7 +68,7 @@ export default function Navbar({
 
   return (
     <>
-      <nav className="bg-slate-950/95 backdrop-blur-2xl sticky top-0 z-40 border-b border-slate-800/80 shadow-2xl">
+      <nav className="bg-[#0f111a]/95 backdrop-blur-2xl sticky top-0 z-40 border-b border-orange-500/20 shadow-2xl shadow-orange-950/20">
         <div className="container mx-auto px-4 sm:px-6 py-2.5">
           <div className="flex items-center justify-between gap-3">
             
@@ -76,12 +76,12 @@ export default function Navbar({
             <div className="flex items-center gap-4 xl:gap-6 shrink-0">
               {/* الشعار */}
               <div 
-                className="flex items-center gap-2 cursor-pointer select-none group shrink-0"
+                className="flex items-center gap-2.5 cursor-pointer select-none group shrink-0"
                 onClick={() => handleSelectTab('home')}
               >
                 <span className="text-2xl sm:text-3xl filter drop-shadow group-hover:scale-110 transition-transform">🍿</span>
                 <div>
-                  <h1 className="text-lg sm:text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-500 to-amber-400 tracking-tight whitespace-nowrap">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-white tracking-tight whitespace-nowrap drop-shadow">
                     {t.appName}
                   </h1>
                 </div>
@@ -95,10 +95,10 @@ export default function Navbar({
                     <button
                       key={tab.id}
                       onClick={() => handleSelectTab(tab.id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                         isActive
-                          ? 'bg-red-600 text-white font-black shadow-md shadow-red-600/40'
-                          : 'text-gray-300 hover:text-white hover:bg-slate-800/70'
+                          ? 'bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white font-black shadow-lg shadow-orange-600/40 scale-105 border border-orange-400/40'
+                          : 'text-gray-300 hover:text-white hover:bg-orange-500/10'
                       }`}
                     >
                       <span className="text-sm">{tab.icon}</span>
@@ -110,10 +110,10 @@ export default function Navbar({
                 {/* زر استعراض باقي الأقسام والتصنيفات */}
                 <button
                   onClick={() => setCategoriesModalOpen(true)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
                     allCategories.slice(5).some(c => c.id === activeTab) && !searchQuery
-                      ? 'bg-gradient-to-r from-amber-500 to-red-600 text-white shadow-md'
-                      : 'text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30'
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-md'
+                      : 'text-orange-400 hover:text-white bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30'
                   }`}
                   title="عرض جميع التصنيفات"
                 >
@@ -123,22 +123,22 @@ export default function Navbar({
               </div>
             </div>
 
-            {/* 2. الأدوات السريعة: أداة المشاهدة النظيفة والبحث والمفضلة واللغة والمستخدم */}
+            {/* 2. الأدوات السريعة */}
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               
-              {/* زر تفعيل المشاهدة العائلية النظيفة (حذف المشاهد السيئة) */}
+              {/* زر تفعيل المشاهدة العائلية النظيفة */}
               <button
                 onClick={onToggleSafeMode}
                 className={`px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 border shadow ${
                   isSafeMode
-                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-emerald-500/20'
+                    ? 'bg-orange-950/80 text-orange-300 border-orange-500/50 shadow-orange-500/20'
                     : 'bg-slate-900 text-gray-400 border-slate-800 hover:text-gray-200'
                 }`}
                 title={isSafeMode ? 'المشاهدة العائلية النظيفة مفعلة 🛡️' : 'تفعيل المشاهدة العائلية النظيفة'}
               >
                 <span>🛡️</span>
                 <span className="hidden sm:inline whitespace-nowrap">{isSafeMode ? 'المشاهدة النظيفة' : 'الوضع العائلي'}</span>
-                <span className={`w-2 h-2 rounded-full ${isSafeMode ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`}></span>
+                <span className={`w-2 h-2 rounded-full ${isSafeMode ? 'bg-orange-400 animate-pulse' : 'bg-gray-600'}`}></span>
               </button>
 
               {/* مربع البحث الأنيق */}
@@ -147,10 +147,10 @@ export default function Navbar({
                   type="text"
                   value={searchQuery}
                   placeholder={t.searchPlaceholder}
-                  className="w-full pl-7 pr-8 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all text-xs"
+                  className="w-full pl-7 pr-8 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-xs"
                   onChange={(e) => onSearch(e.target.value)}
                 />
-                <span className="absolute right-2.5 top-2 text-gray-500 text-xs">🔍</span>
+                <span className="absolute right-2.5 top-2 text-orange-400 text-xs">🔍</span>
                 {searchQuery && (
                   <button
                     onClick={() => onSearch('')}
@@ -166,14 +166,14 @@ export default function Navbar({
                 onClick={() => handleSelectTab('watchlist')}
                 className={`relative p-2 rounded-full border transition-all ${
                   activeTab === 'watchlist' && !searchQuery
-                    ? 'bg-red-600 border-red-500 text-white shadow-md shadow-red-600/30'
+                    ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white border-orange-400 shadow-md shadow-orange-600/30'
                     : 'bg-slate-900/90 hover:bg-slate-800 text-gray-300 border-slate-800 hover:text-white'
                 }`}
                 title={t.watchlist}
               >
                 <span className="text-xs sm:text-sm block">❤️</span>
                 {watchlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black">
+                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black shadow">
                     {watchlistCount}
                   </span>
                 )}
@@ -193,7 +193,7 @@ export default function Navbar({
                 {langMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-30" onClick={() => setLangMenuOpen(false)}></div>
-                    <div className="absolute top-full mt-2 left-0 lg:left-auto lg:right-0 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-1 z-40 w-36 overflow-hidden animate-fadeIn">
+                    <div className="absolute top-full mt-2 left-0 lg:left-auto lg:right-0 bg-slate-900 border border-orange-500/30 rounded-2xl shadow-2xl py-1 z-40 w-36 overflow-hidden animate-fadeIn">
                       {languages.map((lang) => (
                         <button
                           key={lang.code}
@@ -203,7 +203,7 @@ export default function Navbar({
                           }}
                           className={`w-full px-3 py-2 text-xs font-bold flex items-center gap-2 transition-colors ${
                             appLang === lang.code
-                              ? 'bg-red-600 text-white font-black'
+                              ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white font-black'
                               : 'text-gray-300 hover:bg-slate-800 hover:text-white'
                           }`}
                         >
@@ -221,7 +221,7 @@ export default function Navbar({
                 <div className="relative">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:opacity-95 text-white p-1 sm:px-2.5 sm:py-1 rounded-full text-xs font-black flex items-center gap-1.5 shadow-md shadow-red-600/20 transition-all"
+                    className="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 hover:opacity-95 text-white p-1 sm:px-2.5 sm:py-1 rounded-full text-xs font-black flex items-center gap-1.5 shadow-md shadow-orange-600/30 transition-all border border-orange-400/40"
                   >
                     <span className="w-5 h-5 rounded-full bg-slate-950/40 flex items-center justify-center text-xs">
                       {currentUser.avatar || '🍿'}
@@ -233,8 +233,8 @@ export default function Navbar({
                   {userMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-30" onClick={() => setUserMenuOpen(false)}></div>
-                      <div className="absolute top-full mt-2 left-0 lg:left-auto lg:right-0 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-40 w-48 animate-fadeIn space-y-1">
-                        <div className="px-3 py-2 border-b border-slate-800/80 mb-1">
+                      <div className="absolute top-full mt-2 left-0 lg:left-auto lg:right-0 bg-slate-900 border border-orange-500/30 rounded-2xl shadow-2xl p-2 z-40 w-48 animate-fadeIn space-y-1">
+                        <div className="px-3 py-2 border-b border-slate-800 mb-1">
                           <p className="text-xs font-bold text-white truncate flex items-center gap-1.5">
                             <span>{currentUser.avatar || '🍿'}</span>
                             <span>{currentUser.name}</span>
@@ -265,7 +265,7 @@ export default function Navbar({
                             <span className="whitespace-nowrap">{t.watchlist}</span>
                           </span>
                           {watchlistCount > 0 && (
-                            <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black">
+                            <span className="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black">
                               {watchlistCount}
                             </span>
                           )}
@@ -283,7 +283,7 @@ export default function Navbar({
                             <span className="whitespace-nowrap">{t.history}</span>
                           </span>
                           {historyCount > 0 && (
-                            <span className="bg-amber-500 text-slate-950 text-[10px] px-2 py-0.5 rounded-full font-black">
+                            <span className="bg-amber-400 text-slate-950 text-[10px] px-2 py-0.5 rounded-full font-black">
                               {historyCount}
                             </span>
                           )}
@@ -294,7 +294,7 @@ export default function Navbar({
                             onLogout();
                             setUserMenuOpen(false);
                           }}
-                          className="w-full px-3 py-2 text-xs font-bold text-red-400 hover:bg-red-600/20 rounded-xl flex items-center gap-2 transition-colors border-t border-slate-800/80 mt-1"
+                          className="w-full px-3 py-2 text-xs font-bold text-orange-400 hover:bg-orange-600/20 rounded-xl flex items-center gap-2 transition-colors border-t border-slate-800 mt-1"
                         >
                           <span>🚪</span>
                           <span className="whitespace-nowrap">{t.logout}</span>
@@ -306,7 +306,7 @@ export default function Navbar({
               ) : (
                 <button
                   onClick={onOpenAuth}
-                  className="bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-95 text-white px-3.5 py-1.5 rounded-full text-xs font-black shadow-md shadow-red-600/30 transition-all flex items-center gap-1 active:scale-95 whitespace-nowrap"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-400 text-white px-4 py-1.5 rounded-full text-xs font-black shadow-md shadow-orange-600/30 transition-all flex items-center gap-1 active:scale-95 whitespace-nowrap border border-orange-400/40"
                 >
                   <span>👤</span>
                   <span className="whitespace-nowrap">{t.login}</span>
@@ -326,7 +326,7 @@ export default function Navbar({
                   onClick={() => handleSelectTab(tab.id)}
                   className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 flex items-center gap-1 ${
                     isActive
-                      ? 'bg-red-600 text-white font-black shadow-md shadow-red-600/40'
+                      ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white font-black shadow-md shadow-orange-600/40'
                       : 'bg-slate-900 text-gray-300 border border-slate-800 hover:text-white'
                   }`}
                 >
@@ -338,7 +338,7 @@ export default function Navbar({
 
             <button
               onClick={() => setCategoriesModalOpen(true)}
-              className="px-3 py-1 rounded-full text-xs font-black text-amber-400 bg-amber-500/10 border border-amber-500/30 whitespace-nowrap shrink-0 flex items-center gap-1"
+              className="px-3 py-1 rounded-full text-xs font-black text-orange-400 bg-orange-500/10 border border-orange-500/30 whitespace-nowrap shrink-0 flex items-center gap-1"
             >
               <span>✨</span>
               <span className="whitespace-nowrap">{t.categories}</span>
@@ -353,7 +353,7 @@ export default function Navbar({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fadeIn">
           <div className="fixed inset-0" onClick={() => setCategoriesModalOpen(false)}></div>
 
-          <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-[#0f111a] border border-orange-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setCategoriesModalOpen(false)}
               className="absolute top-4 left-4 bg-slate-800 hover:bg-slate-700 text-gray-400 hover:text-white rounded-full w-9 h-9 flex items-center justify-center text-sm transition-colors"
@@ -363,11 +363,11 @@ export default function Navbar({
 
             <div className="text-center mb-6">
               <span className="text-4xl mb-2 inline-block animate-bounce">✨</span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white">
+              <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-white">
                 {t.categories}
               </h2>
               <p className="text-gray-400 text-xs sm:text-sm mt-1">
-                اختر التصنيف المفضل لديك واستمتع بأفضل العروض
+                اختر التصنيف المفضل لديك واستمتع بأفضل العروض الحصرية
               </p>
             </div>
 
@@ -380,21 +380,21 @@ export default function Navbar({
                     onClick={() => handleSelectTab(cat.id)}
                     className={`p-3.5 rounded-2xl border text-right transition-all flex items-start gap-3 group relative overflow-hidden ${
                       isActive
-                        ? 'bg-gradient-to-r from-red-600/30 to-amber-600/30 border-red-500 shadow-lg shadow-red-600/20'
-                        : 'bg-slate-950/80 hover:bg-slate-800/90 border-slate-800 hover:border-slate-700'
+                        ? 'bg-gradient-to-r from-orange-600/30 to-amber-500/30 border-orange-500 shadow-lg shadow-orange-600/20'
+                        : 'bg-slate-950/80 hover:bg-slate-900 border-slate-800 hover:border-orange-500/40'
                     }`}
                   >
-                    <div className="text-2xl p-2 rounded-xl bg-slate-800/80 group-hover:scale-110 transition-transform shrink-0 border border-slate-700/50">
+                    <div className="text-2xl p-2 rounded-xl bg-slate-800 group-hover:scale-110 transition-transform shrink-0 border border-slate-700/50">
                       {cat.icon}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className={`font-black text-xs sm:text-sm truncate ${isActive ? 'text-amber-400' : 'text-white group-hover:text-red-400 transition-colors'}`}>
+                        <h3 className={`font-black text-xs sm:text-sm truncate ${isActive ? 'text-orange-400' : 'text-white group-hover:text-orange-300 transition-colors'}`}>
                           {cat.label}
                         </h3>
                         {cat.badge > 0 && (
-                          <span className="bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black shrink-0">
+                          <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black shrink-0">
                             {cat.badge}
                           </span>
                         )}

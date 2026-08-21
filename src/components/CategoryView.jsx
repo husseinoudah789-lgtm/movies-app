@@ -42,7 +42,7 @@ export default function CategoryView({
 }) {
   const t = translations[appLang] || translations.ar;
   
-  // ضبط الفلتر الافتراضي حسب نوع القسم
+  // ضبط الفلتر الافتراضي
   const getDefaultMediaFilter = (type) => {
     if (type === 'movies' || type === 'arabic_movies' || type === 'upcoming' || type === 'action' || type === 'family' || type === 'top_rated' || type === 'docs') {
       return 'movie';
@@ -62,14 +62,12 @@ export default function CategoryView({
 
   const isLocalList = initialType === 'watchlist' || initialType === 'history';
 
-  // إعادة ضبط الحالة عند تغير القسم
   useEffect(() => {
     setMediaFilter(getDefaultMediaFilter(initialType));
     setSelectedGenre('all');
     setPage(1);
   }, [initialType]);
 
-  // جلب البيانات
   useEffect(() => {
     if (isLocalList) {
       const source = initialType === 'watchlist' ? watchlist : watchHistory;
@@ -162,7 +160,6 @@ export default function CategoryView({
     loadCategoryData();
   }, [initialType, mediaFilter, selectedGenre, page, isLocalList, appLang, watchlist, watchHistory]);
 
-  // تحميل المزيد
   const handleLoadMore = async () => {
     if (isLocalList) return;
     setLoadingMore(true);
@@ -230,13 +227,13 @@ export default function CategoryView({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/80 p-6 rounded-2xl border border-slate-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0f111a]/80 p-6 rounded-2xl border border-orange-500/20 shadow-xl">
         <div>
           <h2 className="text-3xl font-black text-white flex items-center gap-3">
             <span>{icon}</span>
-            <span>{title}</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-white">{title}</span>
           </h2>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-gray-300 text-sm mt-1">
             {initialType === 'history' 
               ? `${t.lastWatched} (${items.length})` 
               : initialType === 'watchlist'
@@ -245,14 +242,14 @@ export default function CategoryView({
           </p>
         </div>
 
-        {/* أزرار التبديل إن لم تكن قائمة محلية */}
+        {/* أزرار التبديل */}
         {!isLocalList && initialType !== 'upcoming' && (
-          <div className="flex items-center bg-slate-950 p-1.5 rounded-xl border border-slate-800 self-start md:self-auto shadow-inner">
+          <div className="flex items-center bg-slate-950 p-1.5 rounded-xl border border-orange-500/30 self-start md:self-auto shadow-inner">
             <button
               onClick={() => setMediaFilter('all')}
               className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
                 mediaFilter === 'all'
-                  ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md font-black'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -262,7 +259,7 @@ export default function CategoryView({
               onClick={() => setMediaFilter('movie')}
               className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
                 mediaFilter === 'movie'
-                  ? 'bg-red-600 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md font-black'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -272,7 +269,7 @@ export default function CategoryView({
               onClick={() => setMediaFilter('tv')}
               className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
                 mediaFilter === 'tv'
-                  ? 'bg-red-600 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md font-black'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -285,7 +282,7 @@ export default function CategoryView({
         {initialType === 'history' && items.length > 0 && (
           <button
             onClick={onClearHistory}
-            className="bg-slate-800 hover:bg-red-600/20 text-gray-300 hover:text-red-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+            className="bg-slate-800 hover:bg-orange-600/20 text-gray-300 hover:text-orange-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all"
           >
             🗑️ {t.clearHistory}
           </button>
@@ -293,14 +290,14 @@ export default function CategoryView({
         {initialType === 'watchlist' && items.length > 0 && (
           <button
             onClick={onClearWatchlist}
-            className="bg-slate-800 hover:bg-red-600/20 text-gray-300 hover:text-red-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+            className="bg-slate-800 hover:bg-orange-600/20 text-gray-300 hover:text-orange-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all"
           >
             💔 {t.clearWatchlist}
           </button>
         )}
       </div>
 
-      {/* شريط التصنيفات (Genres) */}
+      {/* شريط التصنيفات */}
       {!isLocalList && !initialType.startsWith('arabic') && initialType !== 'anime' && initialType !== 'kdrama' && initialType !== 'action' && initialType !== 'upcoming' && initialType !== 'family' && initialType !== 'top_rated' && initialType !== 'docs' && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {GENRE_CONFIG.map((genre) => (
@@ -312,8 +309,8 @@ export default function CategoryView({
               }}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                 selectedGenre === genre.id
-                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                  : 'bg-slate-900/90 text-gray-300 hover:bg-slate-800 border border-slate-800'
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-600/30'
+                  : 'bg-[#0f111a] text-gray-300 hover:bg-slate-800 border border-slate-800'
               }`}
             >
               <span>{t.genres[genre.key]}</span>
@@ -325,7 +322,7 @@ export default function CategoryView({
       {/* المحتوى */}
       {loading ? (
         <div className="flex flex-col justify-center items-center h-72 gap-3">
-          <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-red-500"></div>
+          <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-orange-500"></div>
           <p className="text-gray-400 text-xs animate-pulse">{t.loading}</p>
         </div>
       ) : items.length > 0 ? (
@@ -349,7 +346,7 @@ export default function CategoryView({
               <button
                 onClick={handleLoadMore}
                 disabled={loadingMore}
-                className="bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90 disabled:opacity-50 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg shadow-red-600/30 flex items-center gap-2 active:scale-95"
+                className="bg-gradient-to-r from-orange-600 to-amber-500 hover:opacity-90 disabled:opacity-50 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg shadow-orange-600/30 flex items-center gap-2 active:scale-95"
               >
                 {loadingMore ? (
                   <>
