@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchMediaDetails } from '../services/api';
 import { translations } from '../translations';
 
 export default function HeroSpotlight({ 
@@ -12,24 +13,69 @@ export default function HeroSpotlight({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // حالة عرض لقطة/مشهد الفيديو المباشر في الخلفية
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [showVideo, setShowVideo] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [videoLoading, setVideoLoading] = useState(false);
+
   const featuredItems = items.filter(item => item.backdrop_path || item.poster_path).slice(0, 6);
 
+  // التبديل التلقائي بين الأعمال
   useEffect(() => {
     if (featuredItems.length <= 1 || isPaused) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % featuredItems.length);
-    }, 6500);
+    }, 8500);
     return () => clearInterval(interval);
   }, [featuredItems.length, isPaused]);
 
-  if (!featuredItems.length) return null;
-
   const currentItem = featuredItems[currentIndex] || featuredItems[0];
-  const isTV = currentItem.media_type === 'tv' || (!currentItem.title && !!currentItem.name);
-  const title = currentItem.title || currentItem.name;
-  const releaseDate = currentItem.release_date || currentItem.first_air_date;
+  const isTV = currentItem?.media_type === 'tv' || (!currentItem?.title && !!currentItem?.name);
+  const mediaType = isTV ? 'tv' : 'movie';
+  const title = currentItem?.title || currentItem?.name;
+  const releaseDate = currentItem?.release_date || currentItem?.first_air_date;
   const year = releaseDate ? new Date(releaseDate).getFullYear() : '2026';
-  const isFavorite = watchlist.some((w) => w.id === currentItem.id);
+  const isFavorite = currentItem && watchlist.some((w) => w.id === currentItem.id);
+
+  // جلب مشهد/لقطة الفيديو الترويجي عند تغيير العمل الحالي
+  useEffect(() => {
+    if (!currentItem) return;
+    let isMounted = true;
+    setShowVideo(false);
+    setTrailerKey(null);
+    setVideoLoading(true);
+
+    const loadTrailer = async () => {
+      try {
+        const data = await fetchMediaDetails(mediaType, currentItem.id, 'en-US');
+        if (!isMounted) return;
+        
+        const video = data?.videos?.results?.find(
+          (v) => (v.type === 'Trailer' || v.type === 'Teaser' || v.type === 'Clip') && v.site === 'YouTube'
+        ) || data?.videos?.results?.[0];
+
+        if (video?.key) {
+          setTrailerKey(video.key);
+          // بدء تشغيل لقطة الفيديو بعد ثانية من ظهور البوستر بأسلوب نتفلكس
+          setTimeout(() => {
+            if (isMounted) setShowVideo(true);
+          }, 1200);
+        }
+      } catch (err) {
+        console.error('Error fetching trailer for hero:', err);
+      } finally {
+        if (isMounted) setVideoLoading(false);
+      }
+    };
+
+    loadTrailer();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentItem?.id, mediaType]);
+
+  if (!featuredItems.length || !currentItem) return null;
 
   const backdropUrl = currentItem.backdrop_path
     ? `https://image.tmdb.org/t/p/original${currentItem.backdrop_path}`
@@ -39,31 +85,84 @@ export default function HeroSpotlight({
 
   return (
     <div 
-      className="relative w-full rounded-3xl overflow-hidden mb-10 shadow-2xl border border-orange-500/30 bg-[#0c0d14] group select-none min-h-[480px] sm:min-h-[540px] flex items-end"
+      className="relative w-full rounded-3xl overflow-hidden mb-10 shadow-2xl border border-orange-500/30 bg-[#0c0d14] group select-none min-h-[480px] sm:min-h-[560px] flex items-end"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* صورة الخلفية السينمائية مع تأثير التكبير التدريجي */}
-      {backdropUrl && (
-        <div className="absolute inset-0 z-0 overflow-hidden">
+      {/* 1. خلفية الفيديو التفاعلي أو الصورة السينمائية */}
+      <div className="absolute inset-0 z-0 overflow-hidden bg-black">
+        
+        {/* صورة البوستر كخلفية أساسية وتحتية */}
+        {backdropUrl && (
           <img
-            key={currentItem.id}
+            key={`img-${currentItem.id}`}
             src={backdropUrl}
             alt={title}
-            className="w-full h-full object-cover object-center animate-fadeIn transform transition-transform duration-1000 scale-100 group-hover:scale-105 filter brightness-[0.75]"
+            className={`w-full h-full object-cover object-center animate-fadeIn transform transition-all duration-1000 ${
+              showVideo ? 'opacity-0 scale-105' : 'opacity-100 scale-100 group-hover:scale-105 filter brightness-[0.8]'
+            }`}
           />
-          {/* التدرجات اللونية الفاخرة للظلال والدمج */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#090a0f] via-[#090a0f]/60 to-transparent"></div>
-          <div className={`absolute inset-0 ${t.dir === 'rtl' ? 'bg-gradient-to-l from-transparent via-[#090a0f]/75 to-[#090a0f]' : 'bg-gradient-to-r from-[#090a0f] via-[#090a0f]/75 to-transparent'}`}></div>
-          <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#090a0f]/80 to-transparent"></div>
-        </div>
-      )}
+        )}
 
-      {/* المحتوى والنصوص الرئيسية */}
+        {/* مشغل لقطة الفيديو في الخلفية (Live Scene Video Background) */}
+        {trailerKey && showVideo && (
+          <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden animate-fadeIn">
+            <iframe
+              key={`yt-${trailerKey}-${isMuted}`}
+              src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${trailerKey}&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&disablekb=1&enablejsapi=1&playsinline=1`}
+              title="Live Scene Preview"
+              className="w-[140%] h-[140%] absolute -top-[20%] -left-[20%] object-cover pointer-events-none filter brightness-[0.85]"
+              allow="autoplay; encrypted-media; gyroscope"
+            ></iframe>
+          </div>
+        )}
+
+        {/* تدرجات الإضاءة والظلال السينمائية للدمج والتناسق مع النصوص */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#090a0f] via-[#090a0f]/60 to-transparent pointer-events-none"></div>
+        <div className={`absolute inset-0 ${t.dir === 'rtl' ? 'bg-gradient-to-l from-transparent via-[#090a0f]/80 to-[#090a0f]' : 'bg-gradient-to-r from-[#090a0f] via-[#090a0f]/80 to-transparent'} pointer-events-none`}></div>
+        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#090a0f]/85 to-transparent pointer-events-none"></div>
+      </div>
+
+      {/* 2. أزرار التحكم في لقطة الفيديو في الزاوية العلوية */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+        {/* شارة لقطة فيديو مباشرة */}
+        {showVideo && (
+          <span className="bg-slate-950/80 backdrop-blur-md text-orange-400 border border-orange-500/40 px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5 shadow-xl animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+            <span>لقطة فيديو مباشرة 🎬</span>
+          </span>
+        )}
+
+        {/* زر تشغيل / كتم صوت لقطة الفيديو */}
+        {trailerKey && showVideo && (
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            className="p-2 sm:px-3 sm:py-1.5 rounded-full bg-slate-950/80 hover:bg-orange-600 text-white backdrop-blur-md border border-orange-500/40 text-xs font-bold transition-all shadow-xl flex items-center gap-1.5 active:scale-95"
+            title={isMuted ? 'تشغيل صوت اللقطة' : 'كتم الصوت'}
+          >
+            <span>{isMuted ? '🔇' : '🔊'}</span>
+            <span className="hidden sm:inline">{isMuted ? 'تشغيل الصوت' : 'كتم الصوت'}</span>
+          </button>
+        )}
+
+        {/* زر التبديل بين وضع الفيديو والصورة */}
+        {trailerKey && (
+          <button
+            onClick={() => setShowVideo(!showVideo)}
+            className="p-2 sm:px-3 sm:py-1.5 rounded-full bg-slate-950/80 hover:bg-slate-800 text-gray-200 hover:text-white backdrop-blur-md border border-slate-700/80 text-xs font-bold transition-all shadow-xl flex items-center gap-1.5 active:scale-95"
+            title={showVideo ? 'إيقاف لقطة الفيديو والعودة للبوستر' : 'تشغيل لقطة الفيديو الآن'}
+          >
+            <span>{showVideo ? '🖼️' : '🎥'}</span>
+            <span className="hidden sm:inline">{showVideo ? 'الصورة' : 'مشاهدة اللقطة'}</span>
+          </button>
+        )}
+      </div>
+
+      {/* 3. المحتوى والنصوص الرئيسية */}
       <div className="relative z-10 p-6 sm:p-10 md:p-14 max-w-3xl space-y-4">
         {/* الشارات العلوية */}
         <div className="flex flex-wrap items-center gap-2.5 text-xs font-black">
-          <span className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 font-black px-3.5 py-1 rounded-xl shadow-lg shadow-orange-500/30 uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+          <span className="bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 font-black px-3.5 py-1 rounded-xl shadow-lg shadow-orange-500/30 uppercase tracking-wider flex items-center gap-1.5">
             <span>🔥</span>
             <span>{t.sections.trending}</span>
           </span>
@@ -85,7 +184,7 @@ export default function HeroSpotlight({
           </span>
         </div>
 
-        {/* عنوان العمل بحجم سينمائي ضخم بلون أبيض ناصع */}
+        {/* عنوان العمل بحجم سينمائي ضخم */}
         <h1 
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-2xl line-clamp-2"
         >
@@ -99,7 +198,7 @@ export default function HeroSpotlight({
 
         {/* أزرار الإجراءات التفاعلية */}
         <div className="flex flex-wrap items-center gap-3 pt-3">
-          {/* زر المشاهدة الرئيسي مع توهج برتقالي نابض */}
+          {/* زر المشاهدة الرئيسي */}
           <button
             onClick={() => onSelectMedia(currentItem)}
             className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:opacity-95 text-white font-black px-6 sm:px-8 py-3.5 rounded-2xl shadow-xl shadow-orange-500/40 flex items-center gap-2.5 text-sm sm:text-base transition-all transform hover:scale-105 active:scale-95 glow-btn border border-orange-300/40"
@@ -121,7 +220,7 @@ export default function HeroSpotlight({
             <span>{isFavorite ? t.removeFromWatchlist : t.addToWatchlist}</span>
           </button>
 
-          {/* زر التفاصيل */}
+          {/* زر تفاصيل العمل ومقاطع إضافية */}
           <button
             onClick={() => onSelectMedia(currentItem)}
             className="px-4 py-3.5 bg-slate-900/80 hover:bg-slate-800/90 border border-slate-700/80 rounded-2xl text-xs sm:text-sm font-bold text-gray-200 hover:text-white backdrop-blur-md transition-all hidden sm:flex items-center gap-2"
@@ -132,7 +231,7 @@ export default function HeroSpotlight({
         </div>
       </div>
 
-      {/* شريط المصغرات الجانبي */}
+      {/* 4. شريط المصغرات الجانبي للتنقل */}
       <div className={`absolute z-20 bottom-6 ${t.dir === 'rtl' ? 'left-6' : 'right-6'} hidden md:flex items-center gap-2.5 bg-slate-950/80 backdrop-blur-md p-2 rounded-2xl border border-orange-500/30 shadow-2xl`}>
         {featuredItems.map((item, idx) => {
           const isActive = idx === currentIndex;
@@ -164,7 +263,7 @@ export default function HeroSpotlight({
         })}
       </div>
 
-      {/* أسهم التنقل اليدوي */}
+      {/* 5. أسهم التنقل اليدوي */}
       <button
         onClick={() => setCurrentIndex((prev) => (prev - 1 + featuredItems.length) % featuredItems.length)}
         className={`absolute top-1/2 -translate-y-1/2 ${t.dir === 'rtl' ? 'right-3' : 'left-3'} z-20 w-10 h-10 rounded-full bg-slate-950/70 hover:bg-orange-600 text-white backdrop-blur-md border border-slate-700/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-xl`}

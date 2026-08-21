@@ -3,7 +3,7 @@ import { fetchMediaDetails } from '../services/api';
 import { translations } from '../translations';
 
 const AVAILABLE_LANGUAGES = [
-  { code: 'ar', subCode: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { code: 'ar', subCode: 'ar', label: 'العربية', flag: '🇸🇦', isDefault: true },
   { code: 'en-US', subCode: 'en', label: 'English', flag: '🇺🇸' },
   { code: 'fr-FR', subCode: 'fr', label: 'Français', flag: '🇫🇷' },
   { code: 'es-ES', subCode: 'es', label: 'Español', flag: '🇪🇸' },
@@ -25,9 +25,10 @@ export default function MediaModal({
   const [activeServer, setActiveServer] = useState('vidlink');
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
-  const [selectedLang, setSelectedLang] = useState(appLang === 'ar' ? 'ar' : 'en-US');
+  const [selectedLang, setSelectedLang] = useState('ar'); // العربية تلقائياً لجميع الأعمال
+  const [showSubGuide, setShowSubGuide] = useState(false);
 
-  // أداة حذف وتخطي المشاهد غير اللائقة
+  // أداة حذف وتخطي المشاهد غير اللائقة الشاملة
   const [cleanWatchMode, setCleanWatchMode] = useState(true);
   const [isCensored, setIsCensored] = useState(false);
   const [skipNotification, setSkipNotification] = useState('');
@@ -42,7 +43,7 @@ export default function MediaModal({
   useEffect(() => {
     const loadDetails = async () => {
       setLoading(true);
-      const data = await fetchMediaDetails(mediaType, media.id, selectedLang);
+      const data = await fetchMediaDetails(mediaType, media.id, selectedLang === 'ar' ? 'ar' : selectedLang);
       setDetails(data);
       setLoading(false);
     };
@@ -91,6 +92,7 @@ export default function MediaModal({
     (v) => v.type === 'Trailer' && v.site === 'YouTube'
   ) || details?.videos?.results?.[0];
 
+  // روابط السيرفرات مع تعزيز دعم الترجمة العربية التلقائية لجميع الأفلام والمسلسلات
   const getVideoSrc = () => {
     const id = media.id;
     const sub = currentLangObj.subCode;
@@ -98,25 +100,29 @@ export default function MediaModal({
     if (activeServer === 'trailer') {
       return trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1` : '';
     }
+    // سيرفر 1 VIP: دعم شامل للترجمة العربية المدمجة
     if (activeServer === 'vidlink') {
       return isTV
-        ? `https://vidlink.pro/tv/${id}/${selectedSeason}/${selectedEpisode}?sub=${sub}&sub_lang=${sub}&primaryColor=ea580c&secondaryColor=0f111a&iconColor=ffffff&title=true&poster=true`
-        : `https://vidlink.pro/movie/${id}?sub=${sub}&sub_lang=${sub}&primaryColor=ea580c&secondaryColor=0f111a&iconColor=ffffff&title=true&poster=true`;
+        ? `https://vidlink.pro/tv/${id}/${selectedSeason}/${selectedEpisode}?sub=${sub}&sub_lang=${sub}&sub.${sub}=true&sub_default=true&primaryColor=ea580c&secondaryColor=0f111a&iconColor=ffffff&title=true&poster=true`
+        : `https://vidlink.pro/movie/${id}?sub=${sub}&sub_lang=${sub}&sub.${sub}=true&sub_default=true&primaryColor=ea580c&secondaryColor=0f111a&iconColor=ffffff&title=true&poster=true`;
     }
+    // سيرفر 2 MultiEmbed: دعم متعدد للترجمات مع التفضيل التلقائي
     if (activeServer === 'multiembed') {
       return isTV
-        ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${selectedSeason}&e=${selectedEpisode}&sub_lang=${sub}`
-        : `https://multiembed.mov/?video_id=${id}&tmdb=1&sub_lang=${sub}`;
+        ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${selectedSeason}&e=${selectedEpisode}&sub_lang=${sub}&subtitle_lang=${sub}&sub=${sub}&preferred_sub=${sub}`
+        : `https://multiembed.mov/?video_id=${id}&tmdb=1&sub_lang=${sub}&subtitle_lang=${sub}&sub=${sub}&preferred_sub=${sub}`;
     }
+    // سيرفر 3 VidSrc: دعم الترجمة المباشرة
     if (activeServer === 'vidsrc') {
       return isTV 
-        ? `https://vidsrc.xyz/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?ds_lang=${sub}`
-        : `https://vidsrc.xyz/embed/movie/${id}?ds_lang=${sub}`;
+        ? `https://vidsrc.xyz/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?ds_lang=${sub}&sub_lang=${sub}&sub=1`
+        : `https://vidsrc.xyz/embed/movie/${id}?ds_lang=${sub}&sub_lang=${sub}&sub=1`;
     }
+    // سيرفر 4 AutoEmbed: مشغل بديل مدعوم بالترجمة
     if (activeServer === 'autoembed') {
       return isTV
-        ? `https://player.autoembed.cc/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?sub_lang=${sub}`
-        : `https://player.autoembed.cc/embed/movie/${id}?sub_lang=${sub}`;
+        ? `https://player.autoembed.cc/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?sub_lang=${sub}&server=1`
+        : `https://player.autoembed.cc/embed/movie/${id}?sub_lang=${sub}&server=1`;
     }
     return '';
   };
@@ -149,7 +155,7 @@ export default function MediaModal({
           <span className="group-hover:rotate-90 transition-transform duration-200">✕</span>
         </button>
 
-        {/* مشغل الفيديو */}
+        {/* مشغل الفيديو مع لوحة التحكم والترجمة */}
         <div className="relative aspect-video w-full bg-black shadow-inner overflow-hidden group/player">
           {/* إضاءة محيطية برتقالية */}
           <div className="absolute inset-0 bg-orange-600/15 filter blur-3xl pointer-events-none -z-10"></div>
@@ -171,11 +177,11 @@ export default function MediaModal({
           )}
 
           {/* أزرار التحكم العائمة المباشرة فوق الفيديو */}
-          <div className="absolute top-3 right-3 z-20 flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-orange-500/30 shadow-2xl">
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-orange-500/30 shadow-2xl">
             <span className="flex items-center gap-1.5 text-[11px] font-black text-orange-400">
-              <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
-              <span className="hidden sm:inline">أداة الفلترة والتخطي نشطة</span>
-              <span>🛡️</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="hidden sm:inline">الترجمة التلقائية نشطة 💬</span>
+              <span>🇸🇦</span>
             </span>
 
             <div className="h-3 w-px bg-slate-700 mx-1"></div>
@@ -203,7 +209,7 @@ export default function MediaModal({
             </button>
           </div>
 
-          {/* طبقة التعتيم الفوري */}
+          {/* طبقة التعتيم الفوري لحذف المشاهد غير اللائقة */}
           {isCensored && (
             <div className="absolute inset-0 z-30 backdrop-blur-3xl bg-slate-950/95 flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fadeIn">
               <div className="w-16 h-16 rounded-3xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-3xl shadow-xl shadow-orange-500/20 animate-bounce">
@@ -258,75 +264,25 @@ export default function MediaModal({
           )}
         </div>
 
-        {/* شريط أدوات حذف وتخطي المشاهد غير اللائقة */}
-        <div className="bg-gradient-to-r from-[#090a0f] via-[#0f111a] to-[#090a0f] px-4 sm:px-6 py-3 border-b border-orange-500/20 flex flex-wrap items-center justify-between gap-3 shadow-lg">
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => setCleanWatchMode(!cleanWatchMode)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow ${
-                cleanWatchMode
-                  ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-orange-600/30 scale-105'
-                  : 'bg-slate-800 text-gray-400 hover:text-white'
-              }`}
-            >
-              <span>🛡️</span>
-              <span>{cleanWatchMode ? 'المشاهدة النظيفة تعمل على هذا العمل 🛡️' : t.safeMode}</span>
-            </button>
-
-            <span className="hidden md:inline text-xs text-orange-300 font-bold bg-orange-500/10 px-2.5 py-1 rounded-lg border border-orange-500/20">
-              {isFamilySafeGenre ? t.familySafeBadge : 'فلترة المشاهد الحساسة لجميع السيرفرات'}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsCensored(!isCensored)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 border shadow ${
-                isCensored
-                  ? 'bg-amber-400 text-slate-950 border-amber-300 scale-105'
-                  : 'bg-slate-800/90 hover:bg-slate-800 text-amber-300 border-amber-500/30'
-              }`}
-              title="تعتيم الشاشة فوراً (حرف B)"
-            >
-              <span>{isCensored ? '👁️' : '🙈'}</span>
-              <span>{isCensored ? t.unblurScene : t.blurScene}</span>
-            </button>
-
-            <button
-              onClick={() => handleSkipScene(30)}
-              className="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-800 hover:bg-orange-600 text-white border border-slate-700 transition-all flex items-center gap-1 shadow"
-              title="تخطي 30 ثانية للأمام"
-            >
-              <span>⏩</span>
-              <span>+30ث</span>
-            </button>
-
-            <button
-              onClick={() => handleSkipScene(60)}
-              className="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-800 hover:bg-orange-600 text-white border border-slate-700 transition-all flex items-center gap-1 shadow hidden sm:flex"
-              title="تخطي دقيقة كاملة للأمام"
-            >
-              <span>⏭️</span>
-              <span>+60ث</span>
-            </button>
-          </div>
-        </div>
-
-        {/* شريط اختيار لغة الترجمة */}
-        <div className="bg-slate-950/95 px-4 sm:px-6 py-2.5 border-b border-slate-800 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs text-gray-400">
-          <div className="flex items-center gap-2 text-amber-300 font-bold">
-            <span className="text-base">💬</span>
-            <span>{t.subGuideTitle}</span>
+        {/* شريط اختيار لغة الترجمة الشامل لجميع الأفلام والمسلسلات */}
+        <div className="bg-gradient-to-r from-[#090a0f] via-[#121420] to-[#090a0f] px-4 sm:px-6 py-3 border-b border-orange-500/30 flex flex-col md:flex-row items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-300">
+            <span className="text-lg">💬</span>
+            <span>الترجمة الاحترافية لجميع اللغات:</span>
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-0.5 scrollbar-none">
             {AVAILABLE_LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => setSelectedLang(lang.code)}
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                onClick={() => {
+                  setSelectedLang(lang.code);
+                  setSkipNotification(`💬 تم تفعيل الترجمة: ${lang.label} ${lang.flag}`);
+                  setTimeout(() => setSkipNotification(''), 3000);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                   selectedLang === lang.code
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-md font-black scale-105'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-lg shadow-orange-500/30 font-black scale-105 border border-orange-300/40'
                     : 'bg-slate-900 text-gray-300 hover:bg-slate-800 hover:text-white border border-slate-800'
                 }`}
               >
@@ -334,15 +290,56 @@ export default function MediaModal({
                 <span>{lang.label}</span>
               </button>
             ))}
+
+            {/* زر دليل تفعيل الترجمة */}
+            <button
+              onClick={() => setShowSubGuide(!showSubGuide)}
+              className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-orange-400 hover:bg-orange-500/20 border border-orange-500/30 shrink-0 transition-all flex items-center gap-1"
+              title="طريقة تشغيل الترجمة"
+            >
+              <span>ℹ️</span>
+              <span className="hidden sm:inline">دليل الترجمة</span>
+            </button>
           </div>
         </div>
 
-        {/* أزرار السيرفرات والمواسم */}
+        {/* إشعار وتفاصيل الترجمة المفعلة */}
+        <div className="bg-slate-950/90 px-4 sm:px-6 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between text-xs text-gray-400 gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span className="text-gray-200">
+              الترجمة المفعلة حالياً: <strong className="text-amber-300">{currentLangObj.label} {currentLangObj.flag}</strong> (متاحة لجميع السيرفرات)
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-gray-400">
+            <span>⚙️ لتغيير الخط أو الحجم: اضغط على أيقونة <strong>CC</strong> داخل المشغل</span>
+          </div>
+        </div>
+
+        {/* نافذة دليل الترجمة السريع في حال الحاجة */}
+        {showSubGuide && (
+          <div className="bg-orange-950/40 border-b border-orange-500/40 p-4 text-xs text-gray-200 space-y-2 animate-fadeIn">
+            <div className="flex items-center justify-between font-black text-orange-400">
+              <span className="flex items-center gap-1.5">
+                <span>💡</span>
+                <span>كيفية الاستفادة القصوى من الترجمة على جميع الأفلام والمسلسلات:</span>
+              </span>
+              <button onClick={() => setShowSubGuide(false)} className="text-gray-400 hover:text-white text-sm">✕</button>
+            </div>
+            <ul className="list-disc list-inside space-y-1 text-gray-300 leading-relaxed pr-2">
+              <li><strong>الترجمة العربية 🇸🇦:</strong> مدمجة ومفعلة بشكل تلقائي على سيرفر 1 VIP وسيرفر 2 وسيرفر 3.</li>
+              <li><strong>تخصيص الترجمة:</strong> يمكنك الضغط على زر <strong>[CC]</strong> أو رمز الترس ⚙️ في زاوية المشغل لاختيار حجم الخط ولونه وخلفيته.</li>
+              <li><strong>تبديل السيرفر:</strong> في حال كان الفيلم حديثاً جداً، جرب التبديل بين <strong>سيرفر 1 VIP</strong> و <strong>سيرفر 2</strong> لاختيار أفضل ملف ترجمة احترافي.</li>
+            </ul>
+          </div>
+        )}
+
+        {/* أزرار السيرفرات والمواسم وأداة الحماية */}
         <div className="bg-[#0f111a] p-4 sm:p-5 border-b border-slate-800 space-y-3.5">
           
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-200 font-bold">
-              <span>📡 {t.servers}:</span>
+              <span>📡 سيرفرات البث والترجمة:</span>
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
@@ -360,41 +357,41 @@ export default function MediaModal({
 
               <button
                 onClick={() => setActiveServer('vidlink')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeServer === 'vidlink'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md scale-105 font-black'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md scale-105 font-black border border-orange-300/30'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
-                ⚡ سيرفر 1 (VIP)
+                ⚡ سيرفر 1 (VIP ترجمة عربية)
               </button>
 
               <button
                 onClick={() => setActiveServer('multiembed')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeServer === 'multiembed'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md scale-105 font-black'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md scale-105 font-black border border-orange-300/30'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
-                💬 سيرفر 2
+                💬 سيرفر 2 (متعدد الترجمات)
               </button>
 
               <button
                 onClick={() => setActiveServer('vidsrc')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeServer === 'vidsrc'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md scale-105 font-black'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md scale-105 font-black border border-orange-300/30'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
-                🚀 سيرفر 3
+                🚀 سيرفر 3 (سريع مع ترجمة)
               </button>
 
               {trailer && (
                 <button
                   onClick={() => setActiveServer('trailer')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
                     activeServer === 'trailer'
                       ? 'bg-amber-400 text-slate-950 shadow-md font-black'
                       : 'bg-slate-800 text-amber-300 hover:bg-slate-700 border border-slate-700/60'
@@ -407,7 +404,45 @@ export default function MediaModal({
             </div>
           </div>
 
-          {/* اختيار الموسم والحلقة */}
+          {/* أداة حذف المشاهد السريعة */}
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCleanWatchMode(!cleanWatchMode)}
+                className={`px-3 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow ${
+                  cleanWatchMode
+                    ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-orange-600/30'
+                    : 'bg-slate-800 text-gray-400 hover:text-white'
+                }`}
+              >
+                <span>🛡️</span>
+                <span>{cleanWatchMode ? 'المشاهدة النظيفة نشطة لجميع المشاهد 🛡️' : 'تفعيل الفلترة'}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setIsCensored(!isCensored)}
+                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 border ${
+                  isCensored
+                    ? 'bg-amber-400 text-slate-950 border-amber-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-amber-500/30'
+                }`}
+              >
+                <span>{isCensored ? '👁️' : '🙈'}</span>
+                <span>{isCensored ? 'إلغاء التعتيم' : 'تعتيم المشهد'}</span>
+              </button>
+              <button
+                onClick={() => handleSkipScene(30)}
+                className="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-orange-600 text-white border border-slate-700 transition-all flex items-center gap-1"
+              >
+                <span>⏩</span>
+                <span>تخطي (+30ث)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* اختيار الموسم والحلقة إن كان مسلسلاً */}
           {isTV && details?.seasons && (
             <div className="pt-3 border-t border-slate-800 space-y-3">
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -478,6 +513,9 @@ export default function MediaModal({
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
                     <span className={`px-2.5 py-1 rounded-xl text-xs font-black ${isTV ? 'bg-indigo-600 text-white' : 'bg-orange-600 text-white'}`}>
                       {isTV ? t.tvBadge : t.movieBadge}
+                    </span>
+                    <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-xl text-xs font-black">
+                      💬 مترجم بالكامل
                     </span>
                     {details?.genres?.map((g) => (
                       <span key={g.id} className="bg-slate-800 text-gray-200 px-2.5 py-1 rounded-xl text-xs font-semibold border border-slate-700">
