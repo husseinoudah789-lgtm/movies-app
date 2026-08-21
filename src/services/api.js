@@ -89,6 +89,62 @@ export const fetchMediaDetails = async (type, id, lang = 'ar') => {
   }
 };
 
+// جلب محتوى الأنمي والرسوم المتحركة اليابانية
+export const fetchAnimeContent = async (type = 'tv', page = 1, lang = 'ar') => {
+  try {
+    const res = await fetch(`${BASE_URL}/discover/${type}?api_key=${API_KEY}&with_genres=16&with_original_language=ja&language=${lang}&sort_by=popularity.desc&page=${page}`);
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching anime:", error);
+    return { results: [] };
+  }
+};
+
+// جلب الدراما الكورية والآسيوية (K-Drama)
+export const fetchKDramaContent = async (type = 'tv', page = 1, lang = 'ar') => {
+  try {
+    const res = await fetch(`${BASE_URL}/discover/${type}?api_key=${API_KEY}&with_original_language=ko&language=${lang}&sort_by=popularity.desc&page=${page}`);
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching K-drama:", error);
+    return { results: [] };
+  }
+};
+
+// جلب الأفلام القادمة وقريباً في السينما
+export const fetchUpcomingMovies = async (page = 1, lang = 'ar') => {
+  try {
+    const res = await fetch(`${BASE_URL}/movie/upcoming?api_key=${API_KEY}&language=${lang}&page=${page}`);
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching upcoming movies:", error);
+    return { results: [] };
+  }
+};
+
+// جلب محتوى الأكشن والإثارة
+export const fetchActionContent = async (type = 'movie', page = 1, lang = 'ar') => {
+  try {
+    const genre = type === 'movie' ? '28' : '10759';
+    const res = await fetch(`${BASE_URL}/discover/${type}?api_key=${API_KEY}&with_genres=${genre}&language=${lang}&sort_by=popularity.desc&page=${page}`);
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching action content:", error);
+    return { results: [] };
+  }
+};
+
+// جلب الأفلام الوثائقية
+export const fetchDocumentaries = async (type = 'movie', page = 1, lang = 'ar') => {
+  try {
+    const res = await fetch(`${BASE_URL}/discover/${type}?api_key=${API_KEY}&with_genres=99&language=${lang}&sort_by=popularity.desc&page=${page}`);
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching documentaries:", error);
+    return { results: [] };
+  }
+};
+
 // البحث الشامل
 export const searchContent = async (query, lang = 'ar') => {
   if (!query) return { results: [] };

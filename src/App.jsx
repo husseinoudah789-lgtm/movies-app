@@ -3,6 +3,8 @@ import Navbar from './components/Navbar';
 import MovieCard from './components/MovieCard';
 import CategoryView from './components/CategoryView';
 import MediaModal from './components/MediaModal';
+import AuthModal from './components/AuthModal';
+import UserProfileModal from './components/UserProfileModal';
 import { translations } from './translations';
 import { 
   fetchTrending, 
@@ -10,47 +12,120 @@ import {
   fetchPopularTVShows, 
   fetchFamilyContent, 
   fetchTopRated, 
+  fetchAnimeContent,
+  fetchKDramaContent,
+  fetchUpcomingMovies,
+  fetchActionContent,
+  fetchDocumentaries,
   searchContent 
 } from './services/api';
 
 function App() {
-  const [appLang, setAppLang] = useState('ar'); // لغة الموقع العامة
+  const [appLang, setAppLang] = useState('ar');
   const t = translations[appLang] || translations.ar;
+
+  // حالة المستخدم والمصادقة والملف الشخصي
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  
+  // قوائم المفضلة وسجل المشاهدات
+  const [watchlist, setWatchlist] = useState([]);
+  const [watchHistory, setWatchHistory] = useState([]);
 
   const [activeTab, setActiveTab] = useState('home');
   const [selectedMedia, setSelectedMedia] = useState(null);
+
+  // بيانات الأقسام الرئيسية
   const [trending, setTrending] = useState([]);
   const [movies, setMovies] = useState([]);
   const [tvShows, setTvShows] = useState([]);
+  const [anime, setAnime] = useState([]);
+  const [kdrama, setKdrama] = useState([]);
+  const [actionMedia, setActionMedia] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
   const [family, setFamily] = useState([]);
   const [topRated, setTopRated] = useState([]);
+  const [documentaries, setDocumentaries] = useState([]);
   
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // جلب البيانات باللغة المحددة للموقع
+  // استعادة جلسة المستخدم والمفضلة وسجل المشاهدات عند بدء التطبيق
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('cinema_plus_current_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        setCurrentUser(parsed);
+        
+        const savedWatchlist = localStorage.getItem(`cinema_plus_watchlist_${parsed.id}`);
+        if (savedWatchlist) setWatchlist(JSON.parse(savedWatchlist));
+
+        const savedHistory = localStorage.getItem(`cinema_plus_history_${parsed.id}`);
+        if (savedHistory) setWatchHistory(JSON.parse(savedHistory));
+      } else {
+        const guestWatchlist = localStorage.getItem('cinema_plus_watchlist_guest');
+        if (guestWatchlist) setWatchlist(JSON.parse(guestWatchlist));
+
+        const guestHistory = localStorage.getItem('cinema_plus_history_guest');
+        if (guestHistory) setWatchHistory(JSON.parse(guestHistory));
+      }
+    } catch (e) {
+      console.error('Error loading stored session:', e);
+    }
+  }, []);
+
+  // جلب البيانات لجميع الأقسام باللغة المحددة
   useEffect(() => {
     const loadHomeData = async () => {
       setLoading(true);
-      const [trendingData, moviesData, tvData, familyData, topRatedData] = await Promise.all([
-        fetchTrending(1, appLang),
-        fetchPopularMovies(1, appLang),
-        fetchPopularTVShows(1, appLang),
-        fetchFamilyContent('movie', 1, appLang),
-        fetchTopRated('movie', 1, appLang)
-      ]);
-      setTrending(trendingData.results || []);
-      setMovies(moviesData.results || []);
-      setTvShows(tvData.results || []);
-      setFamily(familyData.results || []);
-      setTopRated(topRatedData.results || []);
-      setLoading(false);
+      try {
+        const [
+          trendingData, 
+          moviesData, 
+          tvData, 
+          animeData,
+          kdramaData,
+          actionData,
+          upcomingData,
+          familyData, 
+          topRatedData,
+          docsData
+        ] = await Promise.all([
+          fetchTrending(1, appLang),
+          fetchPopularMovies(1, appLang),
+          fetchPopularTVShows(1, appLang),
+          fetchAnimeContent('tv', 1, appLang),
+          fetchKDramaContent('tv', 1, appLang),
+          fetchActionContent('movie', 1, appLang),
+          fetchUpcomingMovies(1, appLang),
+          fetchFamilyContent('movie', 1, appLang),
+          fetchTopRated('movie', 1, appLang),
+          fetchDocumentaries('movie', 1, appLang)
+        ]);
+
+        setTrending(trendingData.results || []);
+        setMovies(moviesData.results || []);
+        setTvShows(tvData.results || []);
+        setAnime(animeData.results || []);
+        setKdrama(kdramaData.results || []);
+        setActionMedia(actionData.results || []);
+        setUpcoming(upcomingData.results || []);
+        setFamily(familyData.results || []);
+        setTopRated(topRatedData.results || []);
+        setDocumentaries(docsData.results || []);
+      } catch (err) {
+        console.error('Error loading home data:', err);
+      } finally {
+        setLoading(false);
+      }
     };
     loadHomeData();
   }, [appLang]);
 
-  // البحث باللغة المختارة
+  // البحث التلقائي
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (searchQuery.trim()) {
@@ -59,16 +134,103 @@ function App() {
       } else {
         setSearchResults([]);
       }
-    }, 400);
+    }, 350);
     return () => clearTimeout(timer);
   }, [searchQuery, appLang]);
 
+  // تسجيل الدخول الناجح
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    const savedWatchlist = localStorage.getItem(`cinema_plus_watchlist_${user.id}`);
+    if (savedWatchlist) setWatchlist(JSON.parse(savedWatchlist));
+
+    const savedHistory = localStorage.getItem(`cinema_plus_history_${user.id}`);
+    if (savedHistory) setWatchHistory(JSON.parse(savedHistory));
+  };
+
+  // تسجيل الخروج
+  const handleLogout = () => {
+    localStorage.removeItem('cinema_plus_current_user');
+    setCurrentUser(null);
+    const guestWatchlist = localStorage.getItem('cinema_plus_watchlist_guest');
+    setWatchlist(guestWatchlist ? JSON.parse(guestWatchlist) : []);
+    const guestHistory = localStorage.getItem('cinema_plus_history_guest');
+    setWatchHistory(guestHistory ? JSON.parse(guestHistory) : []);
+    if (activeTab === 'watchlist' || activeTab === 'history') setActiveTab('home');
+  };
+
+  // تحديث بيانات المستخدم
+  const handleUpdateUser = (updatedUser) => {
+    setCurrentUser(updatedUser);
+  };
+
+  // إضافة أو إزالة عمل من المفضلة
+  const handleToggleFavorite = (media) => {
+    const exists = watchlist.some((w) => w.id === media.id);
+    let updated;
+    if (exists) {
+      updated = watchlist.filter((w) => w.id !== media.id);
+    } else {
+      updated = [media, ...watchlist];
+    }
+    setWatchlist(updated);
+
+    const storageKey = currentUser
+      ? `cinema_plus_watchlist_${currentUser.id}`
+      : 'cinema_plus_watchlist_guest';
+    localStorage.setItem(storageKey, JSON.stringify(updated));
+  };
+
+  // تفريغ المفضلة
+  const handleClearWatchlist = () => {
+    setWatchlist([]);
+    const storageKey = currentUser
+      ? `cinema_plus_watchlist_${currentUser.id}`
+      : 'cinema_plus_watchlist_guest';
+    localStorage.removeItem(storageKey);
+  };
+
+  // إضافة عمل إلى سجل المشاهدات تلقائياً
+  const handleAddToHistory = (item) => {
+    const filtered = watchHistory.filter((h) => h.id !== item.id);
+    const updated = [item, ...filtered].slice(0, 30); // حفظ آخر 30 عمل
+    setWatchHistory(updated);
+
+    const storageKey = currentUser
+      ? `cinema_plus_history_${currentUser.id}`
+      : 'cinema_plus_history_guest';
+    localStorage.setItem(storageKey, JSON.stringify(updated));
+  };
+
+  // تفريغ سجل المشاهدات
+  const handleClearHistory = () => {
+    setWatchHistory([]);
+    const storageKey = currentUser
+      ? `cinema_plus_history_${currentUser.id}`
+      : 'cinema_plus_history_guest';
+    localStorage.removeItem(storageKey);
+  };
+
+  // أقسام الصفحة الرئيسية
   const homeSections = [
+    ...(watchHistory.length > 0 ? [{
+      id: 'history',
+      tabTarget: 'history',
+      title: t.sections.continueWatching,
+      icon: '⏱️',
+      data: watchHistory,
+      mediaType: null
+    }] : []),
     { id: 'trending', tabTarget: 'home', title: t.sections.trending, icon: '🔥', data: trending, mediaType: null },
     { id: 'movies', tabTarget: 'movies', title: t.sections.movies, icon: '🎬', data: movies, mediaType: 'movie' },
     { id: 'tv', tabTarget: 'tv', title: t.sections.tv, icon: '📺', data: tvShows, mediaType: 'tv' },
-    { id: 'family', tabTarget: 'family', title: t.sections.family, icon: '👨‍👩‍👧‍👦', data: family, mediaType: 'movie' },
+    { id: 'anime', tabTarget: 'anime', title: t.sections.anime, icon: '🎌', data: anime, mediaType: 'tv' },
+    { id: 'kdrama', tabTarget: 'kdrama', title: t.sections.kdrama, icon: '🎎', data: kdrama, mediaType: 'tv' },
+    { id: 'action', tabTarget: 'action', title: t.sections.action, icon: '💥', data: actionMedia, mediaType: 'movie' },
+    { id: 'upcoming', tabTarget: 'upcoming', title: t.sections.upcoming, icon: '🍿', data: upcoming, mediaType: 'movie' },
     { id: 'top_rated', tabTarget: 'top_rated', title: t.sections.topRated, icon: '⭐', data: topRated, mediaType: 'movie' },
+    { id: 'family', tabTarget: 'family', title: t.sections.family, icon: '👨‍👩‍👧‍👦', data: family, mediaType: 'movie' },
+    { id: 'docs', tabTarget: 'docs', title: t.sections.docs, icon: '🌍', data: documentaries, mediaType: 'movie' },
   ];
 
   return (
@@ -76,6 +238,7 @@ function App() {
       className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-red-600 selection:text-white transition-all duration-300" 
       dir={t.dir}
     >
+      {/* شريط التنقل العلوي */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -83,6 +246,12 @@ function App() {
         searchQuery={searchQuery}
         appLang={appLang}
         setAppLang={setAppLang}
+        currentUser={currentUser}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onLogout={handleLogout}
+        watchlistCount={watchlist.length}
+        historyCount={watchHistory.length}
       />
       
       <main className="container mx-auto px-4 py-8 max-w-7xl">
@@ -107,6 +276,8 @@ function App() {
                     item={item} 
                     onClick={(selected) => setSelectedMedia(selected)}
                     appLang={appLang}
+                    isFavorite={watchlist.some((w) => w.id === item.id)}
+                    onToggleFavorite={handleToggleFavorite}
                   />
                 ))}
               </div>
@@ -139,7 +310,7 @@ function App() {
                           setActiveTab(section.tabTarget);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-1"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-1"
                       >
                         <span>{t.browseSection}</span>
                         <span>{t.dir === 'rtl' ? '←' : '→'}</span>
@@ -150,13 +321,15 @@ function App() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     {section.data.slice(0, 6).map((item) => (
                       <MovieCard 
-                        key={item.id} 
+                        key={`${item.id}-${section.id}`} 
                         item={{
                           ...item, 
                           media_type: section.mediaType || item.media_type
                         }} 
                         onClick={(selected) => setSelectedMedia(selected)}
                         appLang={appLang}
+                        isFavorite={watchlist.some((w) => w.id === item.id)}
+                        onToggleFavorite={handleToggleFavorite}
                       />
                     ))}
                   </div>
@@ -164,39 +337,47 @@ function App() {
               ))}
             </div>
           )
-        ) : activeTab === 'movies' ? (
+        ) : (
+          /* صفحات الأقسام المخصصة */
           <CategoryView 
-            initialType="movies" 
-            title={t.movies} 
-            icon="🎬" 
+            initialType={activeTab} 
+            title={
+              activeTab === 'movies' ? t.movies :
+              activeTab === 'tv' ? t.tv :
+              activeTab === 'anime' ? t.anime :
+              activeTab === 'kdrama' ? t.kdrama :
+              activeTab === 'action' ? t.action :
+              activeTab === 'upcoming' ? t.upcoming :
+              activeTab === 'top_rated' ? t.topRated :
+              activeTab === 'family' ? t.family :
+              activeTab === 'docs' ? t.docs :
+              activeTab === 'watchlist' ? t.watchlist :
+              activeTab === 'history' ? t.history :
+              t.appName
+            } 
+            icon={
+              activeTab === 'movies' ? '🎬' :
+              activeTab === 'tv' ? '📺' :
+              activeTab === 'anime' ? '🎌' :
+              activeTab === 'kdrama' ? '🎎' :
+              activeTab === 'action' ? '💥' :
+              activeTab === 'upcoming' ? '🍿' :
+              activeTab === 'top_rated' ? '⭐' :
+              activeTab === 'family' ? '👨‍👩‍👧‍👦' :
+              activeTab === 'docs' ? '🌍' :
+              activeTab === 'watchlist' ? '❤️' :
+              activeTab === 'history' ? '⏱️' :
+              '🍿'
+            } 
             onSelectMedia={(selected) => setSelectedMedia(selected)}
             appLang={appLang}
+            watchlist={watchlist}
+            watchHistory={watchHistory}
+            onToggleFavorite={handleToggleFavorite}
+            onClearHistory={handleClearHistory}
+            onClearWatchlist={handleClearWatchlist}
           />
-        ) : activeTab === 'tv' ? (
-          <CategoryView 
-            initialType="tv" 
-            title={t.tv} 
-            icon="📺" 
-            onSelectMedia={(selected) => setSelectedMedia(selected)}
-            appLang={appLang}
-          />
-        ) : activeTab === 'family' ? (
-          <CategoryView 
-            initialType="family" 
-            title={t.family} 
-            icon="👨‍👩‍👧‍👦" 
-            onSelectMedia={(selected) => setSelectedMedia(selected)}
-            appLang={appLang}
-          />
-        ) : activeTab === 'top_rated' ? (
-          <CategoryView 
-            initialType="top_rated" 
-            title={t.topRated} 
-            icon="⭐" 
-            onSelectMedia={(selected) => setSelectedMedia(selected)}
-            appLang={appLang}
-          />
-        ) : null}
+        )}
       </main>
 
       {/* نافذة المشاهدة وعرض التفاصيل التفاعلية */}
@@ -204,8 +385,34 @@ function App() {
         <MediaModal 
           media={selectedMedia} 
           onClose={() => setSelectedMedia(null)} 
+          appLang={appLang}
+          isFavorite={watchlist.some((w) => w.id === selectedMedia.id)}
+          onToggleFavorite={handleToggleFavorite}
+          onAddToHistory={handleAddToHistory}
         />
       )}
+
+      {/* نافذة تسجيل الدخول وإنشاء الحساب */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+        appLang={appLang}
+      />
+
+      {/* نافذة الملف الشخصي للمستخدم */}
+      <UserProfileModal 
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        currentUser={currentUser}
+        onUpdateUser={handleUpdateUser}
+        onLogout={handleLogout}
+        watchlistCount={watchlist.length}
+        historyCount={watchHistory.length}
+        onClearHistory={handleClearHistory}
+        onClearWatchlist={handleClearWatchlist}
+        appLang={appLang}
+      />
 
       {/* Footer */}
       <footer className="mt-20 border-t border-slate-800 bg-slate-900/80 py-8 text-center text-sm text-gray-500">

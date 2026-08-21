@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchMediaDetails } from '../services/api';
+import { translations } from '../translations';
 
 const AVAILABLE_LANGUAGES = [
   { code: 'ar', subCode: 'ar', label: 'العربية', flag: '🇸🇦' },
@@ -10,20 +11,27 @@ const AVAILABLE_LANGUAGES = [
   { code: 'de-DE', subCode: 'de', label: 'Deutsch', flag: '🇩🇪' },
 ];
 
-export default function MediaModal({ media, onClose }) {
+export default function MediaModal({ 
+  media, 
+  onClose, 
+  appLang = 'ar',
+  isFavorite = false,
+  onToggleFavorite,
+  onAddToHistory
+}) {
+  const t = translations[appLang] || translations.ar;
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeServer, setActiveServer] = useState('vidlink');
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
-  const [selectedLang, setSelectedLang] = useState('ar');
+  const [selectedLang, setSelectedLang] = useState(appLang === 'ar' ? 'ar' : 'en-US');
 
   const isTV = media.media_type === 'tv' || (!media.title && !!media.name);
   const mediaType = isTV ? 'tv' : 'movie';
 
   const currentLangObj = AVAILABLE_LANGUAGES.find((l) => l.code === selectedLang) || AVAILABLE_LANGUAGES[0];
 
-  // جلب تفاصيل العمل الفني
   useEffect(() => {
     const loadDetails = async () => {
       setLoading(true);
@@ -35,7 +43,19 @@ export default function MediaModal({ media, onClose }) {
     loadDetails();
   }, [media.id, mediaType, selectedLang]);
 
-  // إغلاق عند الضغط على زر ESC
+  // تسجيل العمل في سجل المشاهدات
+  useEffect(() => {
+    if (media && onAddToHistory) {
+      onAddToHistory({
+        ...media,
+        media_type: mediaType,
+        watchedSeason: isTV ? selectedSeason : null,
+        watchedEpisode: isTV ? selectedEpisode : null,
+        watchedAt: new Date().toISOString()
+      });
+    }
+  }, [media?.id, selectedSeason, selectedEpisode]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
@@ -44,12 +64,10 @@ export default function MediaModal({ media, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // إيجاد الإعلان الترويجي
   const trailer = details?.videos?.results?.find(
     (v) => v.type === 'Trailer' && v.site === 'YouTube'
   ) || details?.videos?.results?.[0];
 
-  // رابط الفيديو مع تمرير كود لغة الترجمة المختارة للمشغل
   const getVideoSrc = () => {
     const id = media.id;
     const sub = currentLangObj.subCode;
@@ -57,25 +75,21 @@ export default function MediaModal({ media, onClose }) {
     if (activeServer === 'trailer') {
       return trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1` : '';
     }
-    // سيرفر 1 (VidLink) - يدعم تمرير كود لغة الترجمة مباشرة في الرابط
     if (activeServer === 'vidlink') {
       return isTV
         ? `https://vidlink.pro/tv/${id}/${selectedSeason}/${selectedEpisode}?sub=${sub}&sub_lang=${sub}&primaryColor=e11d48&secondaryColor=0f172a&iconColor=ffffff&title=true&poster=true`
         : `https://vidlink.pro/movie/${id}?sub=${sub}&sub_lang=${sub}&primaryColor=e11d48&secondaryColor=0f172a&iconColor=ffffff&title=true&poster=true`;
     }
-    // سيرفر 2 (MultiEmbed)
     if (activeServer === 'multiembed') {
       return isTV
         ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${selectedSeason}&e=${selectedEpisode}&sub_lang=${sub}`
         : `https://multiembed.mov/?video_id=${id}&tmdb=1&sub_lang=${sub}`;
     }
-    // سيرفر 3 (VidSrc)
     if (activeServer === 'vidsrc') {
       return isTV 
         ? `https://vidsrc.xyz/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?ds_lang=${sub}`
         : `https://vidsrc.xyz/embed/movie/${id}?ds_lang=${sub}`;
     }
-    // سيرفر 4 (AutoEmbed)
     if (activeServer === 'autoembed') {
       return isTV
         ? `https://player.autoembed.cc/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?sub_lang=${sub}`
@@ -97,10 +111,8 @@ export default function MediaModal({ media, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
-      {/* خلفية الإغلاق عند النقر بالخارج */}
       <div className="fixed inset-0" onClick={onClose}></div>
 
-      {/* نافذة العرض الرئيسية */}
       <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-700/80 rounded-3xl overflow-hidden shadow-2xl z-10 my-auto">
         
         {/* زر الإغلاق */}
@@ -130,11 +142,11 @@ export default function MediaModal({ media, onClose }) {
           )}
         </div>
 
-        {/* شريط اختيار لغة الترجمة والمعلومات الفورية */}
+        {/* شريط اختيار لغة الترجمة */}
         <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-4 sm:px-6 py-3 border-b border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3 shadow-md">
           <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-400">
             <span className="text-lg">💬</span>
-            <span>اختر لغة الترجمة في المشغل وتفاصيل العمل:</span>
+            <span>{t.subGuideTitle}</span>
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
@@ -160,62 +172,67 @@ export default function MediaModal({ media, onClose }) {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
             <span className="text-gray-300">
-              لغة الترجمة المفعلة في المشغل: <strong className="text-amber-400">{currentLangObj.label} {currentLangObj.flag}</strong>
+              {t.subActive} <strong className="text-amber-400">{currentLangObj.label} {currentLangObj.flag}</strong>
             </span>
           </div>
           <span className="hidden sm:inline text-[11px] text-gray-500">
-            يمكنك أيضاً تعديل الخط والحجم من زر [CC] داخل المشغل ⚙️
+            {t.subGuideText}
           </span>
         </div>
 
-        {/* أزرار السيرفرات واختيار الحلقات */}
+        {/* أزرار السيرفرات والمفضلة والمواسم */}
         <div className="bg-slate-950 p-4 border-b border-slate-800 space-y-4">
           
-          {/* اختيار السيرفر */}
+          {/* اختيار السيرفر وزر المفضلة */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm text-gray-300 font-bold">
-              <span>📡 سيرفرات المشاهدة:</span>
+              <span>📡 {t.servers}:</span>
             </div>
+            
             <div className="flex flex-wrap items-center gap-2">
+              
+              {/* زر إضافة للمفضلة في المودال */}
+              <button
+                onClick={() => onToggleFavorite && onToggleFavorite(media)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
+                  isFavorite
+                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/40'
+                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-red-400'
+                }`}
+              >
+                <span>{isFavorite ? '❤️' : '🤍'}</span>
+                <span>{isFavorite ? t.removeFromWatchlist : t.addToWatchlist}</span>
+              </button>
+
               <button
                 onClick={() => setActiveServer('vidlink')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                   activeServer === 'vidlink'
                     ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
                 }`}
               >
-                <span>⚡ سيرفر 1 (ترجمة تلقائية VIP)</span>
+                ⚡ سيرفر 1 (VIP)
               </button>
               <button
                 onClick={() => setActiveServer('multiembed')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                   activeServer === 'multiembed'
                     ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
                 }`}
               >
-                <span>💬 سيرفر 2</span>
+                💬 سيرفر 2
               </button>
               <button
                 onClick={() => setActiveServer('vidsrc')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                   activeServer === 'vidsrc'
                     ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
                 }`}
               >
-                <span>🚀 سيرفر 3</span>
-              </button>
-              <button
-                onClick={() => setActiveServer('autoembed')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
-                  activeServer === 'autoembed'
-                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
-                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-                }`}
-              >
-                <span>🌐 سيرفر 4</span>
+                🚀 سيرفر 3
               </button>
               {trailer && (
                 <button
@@ -227,7 +244,7 @@ export default function MediaModal({ media, onClose }) {
                   }`}
                 >
                   <span>▶️</span>
-                  <span>الإعلان الرسمي</span>
+                  <span>Trailer</span>
                 </button>
               )}
             </div>
@@ -237,7 +254,7 @@ export default function MediaModal({ media, onClose }) {
           {isTV && details?.seasons && (
             <div className="pt-3 border-t border-slate-800/80 space-y-3">
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                <span className="text-xs text-gray-400 font-bold whitespace-nowrap">المواسم:</span>
+                <span className="text-xs text-gray-400 font-bold whitespace-nowrap">{t.seasons}:</span>
                 {details.seasons
                   .filter((s) => s.season_number > 0)
                   .map((season) => (
@@ -253,13 +270,13 @@ export default function MediaModal({ media, onClose }) {
                           : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
                       }`}
                     >
-                      الموسم {season.season_number}
+                      {t.season} {season.season_number}
                     </button>
                   ))}
               </div>
 
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                <span className="text-xs text-gray-400 font-bold whitespace-nowrap">الحلقات:</span>
+                <span className="text-xs text-gray-400 font-bold whitespace-nowrap">{t.episodes}:</span>
                 {Array.from({ length: Math.min(totalEpisodesInSeason, 40) }, (_, i) => i + 1).map((ep) => (
                   <button
                     key={ep}
@@ -283,7 +300,7 @@ export default function MediaModal({ media, onClose }) {
         {loading ? (
           <div className="flex flex-col items-center justify-center h-48 gap-3">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-red-500"></div>
-            <p className="text-gray-400 text-xs animate-pulse">جاري تحديث اللغة والمعلومات...</p>
+            <p className="text-gray-400 text-xs animate-pulse">{t.loading}</p>
           </div>
         ) : (
           <div className="p-6 md:p-8 space-y-6">
@@ -305,7 +322,7 @@ export default function MediaModal({ media, onClose }) {
                 <div>
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
                     <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${isTV ? 'bg-indigo-600 text-white' : 'bg-red-600 text-white'}`}>
-                      {isTV ? '📺 مسلسل' : '🎬 فيلم'}
+                      {isTV ? t.tvBadge : t.movieBadge}
                     </span>
                     {details?.genres?.map((g) => (
                       <span key={g.id} className="bg-slate-800 text-gray-300 px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-700">
@@ -323,38 +340,38 @@ export default function MediaModal({ media, onClose }) {
                 {/* إحصائيات سريعة */}
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs sm:text-sm text-gray-300 font-semibold">
                   <span className="flex items-center gap-1 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
-                    ⭐ {details?.vote_average?.toFixed(1) || 'N/A'} ({details?.vote_count || 0} تقييم)
+                    ⭐ {details?.vote_average?.toFixed(1) || 'N/A'} ({details?.vote_count || 0})
                   </span>
                   <span className="bg-slate-800 px-2.5 py-1 rounded-lg">
-                    📅 {releaseDate ? new Date(releaseDate).getFullYear() : 'غير معروف'}
+                    📅 {releaseDate ? new Date(releaseDate).getFullYear() : '—'}
                   </span>
                   {details?.runtime ? (
                     <span className="bg-slate-800 px-2.5 py-1 rounded-lg">
-                      ⏱️ {details.runtime} دقيقة
+                      ⏱️ {details.runtime} min
                     </span>
                   ) : null}
                   {isTV && details?.number_of_seasons ? (
                     <span className="bg-slate-800 px-2.5 py-1 rounded-lg">
-                      📂 {details.number_of_seasons} مواسم ({details.number_of_episodes} حلقة)
+                      📂 {details.number_of_seasons} {t.seasons} ({details.number_of_episodes} {t.episodes})
                     </span>
                   ) : null}
                 </div>
 
-                {/* قصة العمل باللغة المختارة */}
+                {/* قصة العمل */}
                 <div>
                   <h3 className="text-sm font-bold text-gray-300 mb-1.5 flex items-center justify-center md:justify-start gap-1.5">
                     <span>📖</span>
-                    <span>قصة العمل ({currentLangObj.label}):</span>
+                    <span>{t.story} ({currentLangObj.label}):</span>
                   </h3>
                   <p className="text-gray-300 text-sm leading-relaxed">
-                    {details?.overview ? details.overview : 'لا يتوفر ملخص بهذه اللغة حالياً.'}
+                    {details?.overview ? details.overview : t.noOverview}
                   </p>
                 </div>
 
                 {/* طاقم التمثيل */}
                 {details?.credits?.cast?.length > 0 && (
                   <div className="pt-2">
-                    <h3 className="text-sm font-bold text-gray-300 mb-2">🎭 أبرز الممثلين:</h3>
+                    <h3 className="text-sm font-bold text-gray-300 mb-2">🎭 {t.actors}:</h3>
                     <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none justify-center md:justify-start">
                       {details.credits.cast.slice(0, 7).map((actor) => (
                         <div key={actor.id} className="text-center shrink-0 w-16">
@@ -362,7 +379,7 @@ export default function MediaModal({ media, onClose }) {
                             src={
                               actor.profile_path
                                 ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
-                                : 'https://via.placeholder.com/185x185/1e293b/94a3b8?text=مجهول'
+                                : 'https://via.placeholder.com/185x185/1e293b/94a3b8?text=?'
                             }
                             alt={actor.name}
                             className="w-12 h-12 rounded-full object-cover mx-auto mb-1 border border-slate-700"

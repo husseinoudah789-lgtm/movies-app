@@ -6,7 +6,12 @@ import {
   fetchPopularTVShows, 
   fetchByGenre, 
   fetchFamilyContent, 
-  fetchTopRated 
+  fetchTopRated,
+  fetchAnimeContent,
+  fetchKDramaContent,
+  fetchUpcomingMovies,
+  fetchActionContent,
+  fetchDocumentaries
 } from '../services/api';
 
 const GENRE_CONFIG = [
@@ -21,11 +26,28 @@ const GENRE_CONFIG = [
   { id: 'family', key: 'family', movieGenre: 10751, tvGenre: 10762 },
 ];
 
-export default function CategoryView({ initialType = 'all', title, icon, onSelectMedia, appLang = 'ar' }) {
+export default function CategoryView({ 
+  initialType = 'all', 
+  title, 
+  icon, 
+  onSelectMedia, 
+  appLang = 'ar',
+  watchlist = [],
+  watchHistory = [],
+  onToggleFavorite,
+  onClearHistory,
+  onClearWatchlist
+}) {
   const t = translations[appLang] || translations.ar;
-  const [mediaFilter, setMediaFilter] = useState(
-    initialType === 'movies' ? 'movie' : initialType === 'tv' ? 'tv' : 'all'
-  );
+  
+  // ضبط الفلتر الافتراضي حسب نوع القسم
+  const getDefaultMediaFilter = (type) => {
+    if (type === 'movies' || type === 'upcoming' || type === 'docs') return 'movie';
+    if (type === 'tv' || type === 'kdrama') return 'tv';
+    return 'all';
+  };
+
+  const [mediaFilter, setMediaFilter] = useState(getDefaultMediaFilter(initialType));
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
@@ -33,9 +55,7 @@ export default function CategoryView({ initialType = 'all', title, icon, onSelec
   const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    if (initialType === 'movies') setMediaFilter('movie');
-    else if (initialType === 'tv') setMediaFilter('tv');
-    else setMediaFilter('all');
+    setMediaFilter(getDefaultMediaFilter(initialType));
     setSelectedGenre('all');
   }, [initialType]);
 
@@ -43,11 +63,70 @@ export default function CategoryView({ initialType = 'all', title, icon, onSelec
     if (pageNumber === 1) setLoading(true);
     else setLoadingMore(true);
 
-    const genreObj = GENRE_CONFIG.find((g) => g.id === selectedGenre);
+    const genreObj = GENRE_CONFIG.find((g) => g.id === selectedGenre) || GENRE_CONFIG[0];
     let combinedResults = [];
 
     try {
-      if (initialType === 'family') {
+      if (initialType === 'watchlist') {
+        combinedResults = watchlist;
+      } else if (initialType === 'history') {
+        combinedResults = watchHistory;
+      } else if (initialType === 'anime') {
+        if (mediaFilter === 'all') {
+          const [tvRes, movRes] = await Promise.all([
+            fetchAnimeContent('tv', pageNumber, appLang),
+            fetchAnimeContent('movie', pageNumber, appLang)
+          ]);
+          const tList = (tvRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
+          const mList = (movRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
+          combinedResults = interleave(tList, mList);
+        } else {
+          const res = await fetchAnimeContent(mediaFilter, pageNumber, appLang);
+          combinedResults = (res.results || []).map(i => ({ ...i, media_type: mediaFilter }));
+        }
+      } else if (initialType === 'kdrama') {
+        if (mediaFilter === 'all') {
+          const [tvRes, movRes] = await Promise.all([
+            fetchKDramaContent('tv', pageNumber, appLang),
+            fetchKDramaContent('movie', pageNumber, appLang)
+          ]);
+          const tList = (tvRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
+          const mList = (movRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
+          combinedResults = interleave(tList, mList);
+        } else {
+          const res = await fetchKDramaContent(mediaFilter, pageNumber, appLang);
+          combinedResults = (res.results || []).map(i => ({ ...i, media_type: mediaFilter }));
+        }
+      } else if (initialType === 'upcoming') {
+        const res = await fetchUpcomingMovies(pageNumber, appLang);
+        combinedResults = (res.results || []).map(i => ({ ...i, media_type: 'movie' }));
+      } else if (initialType === 'action') {
+        if (mediaFilter === 'all') {
+          const [mRes, tRes] = await Promise.all([
+            fetchActionContent('movie', pageNumber, appLang),
+            fetchActionContent('tv', pageNumber, appLang)
+          ]);
+          const mList = (mRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
+          const tList = (tRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
+          combinedResults = interleave(mList, tList);
+        } else {
+          const res = await fetchActionContent(mediaFilter, pageNumber, appLang);
+          combinedResults = (res.results || []).map(i => ({ ...i, media_type: mediaFilter }));
+        }
+      } else if (initialType === 'docs') {
+        if (mediaFilter === 'all') {
+          const [mRes, tRes] = await Promise.all([
+            fetchDocumentaries('movie', pageNumber, appLang),
+            fetchDocumentaries('tv', pageNumber, appLang)
+          ]);
+          const mList = (mRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
+          const tList = (tRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
+          combinedResults = interleave(mList, tList);
+        } else {
+          const res = await fetchDocumentaries(mediaFilter, pageNumber, appLang);
+          combinedResults = (res.results || []).map(i => ({ ...i, media_type: mediaFilter }));
+        }
+      } else if (initialType === 'family') {
         if (mediaFilter === 'all') {
           const [mRes, tRes] = await Promise.all([
             fetchFamilyContent('movie', pageNumber, appLang),
@@ -74,6 +153,7 @@ export default function CategoryView({ initialType = 'all', title, icon, onSelec
           combinedResults = (res.results || []).map(item => ({ ...item, media_type: mediaFilter }));
         }
       } else {
+        // Movies or TV default view
         if (selectedGenre === 'all') {
           if (mediaFilter === 'all') {
             const [mRes, tRes] = await Promise.all([
@@ -139,13 +219,15 @@ export default function CategoryView({ initialType = 'all', title, icon, onSelec
   useEffect(() => {
     setPage(1);
     loadData(1, false);
-  }, [initialType, mediaFilter, selectedGenre, appLang]);
+  }, [initialType, mediaFilter, selectedGenre, appLang, watchlist, watchHistory]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
     loadData(nextPage, true);
   };
+
+  const isLocalList = initialType === 'watchlist' || initialType === 'history';
 
   return (
     <div className="space-y-6">
@@ -157,61 +239,87 @@ export default function CategoryView({ initialType = 'all', title, icon, onSelec
             <span>{title}</span>
           </h2>
           <p className="text-gray-400 text-sm mt-1">
-            {t.exploreBest} {mediaFilter === 'movie' ? t.movies : mediaFilter === 'tv' ? t.tv : `${t.movies} & ${t.tv}`}
+            {initialType === 'history' 
+              ? `${t.lastWatched} (${items.length})` 
+              : initialType === 'watchlist'
+              ? `${t.watchlist} (${items.length})`
+              : `${t.exploreBest} ${mediaFilter === 'movie' ? t.movies : mediaFilter === 'tv' ? t.tv : `${t.movies} & ${t.tv}`}`}
           </p>
         </div>
 
-        {/* أزرار التبديل */}
-        <div className="flex items-center bg-slate-950 p-1.5 rounded-xl border border-slate-800 self-start md:self-auto shadow-inner">
+        {/* أزرار التبديل إن لم تكن قائمة محلية */}
+        {!isLocalList && initialType !== 'upcoming' && (
+          <div className="flex items-center bg-slate-950 p-1.5 rounded-xl border border-slate-800 self-start md:self-auto shadow-inner">
+            <button
+              onClick={() => setMediaFilter('all')}
+              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+                mediaFilter === 'all'
+                  ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              {t.allMedia}
+            </button>
+            <button
+              onClick={() => setMediaFilter('movie')}
+              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+                mediaFilter === 'movie'
+                  ? 'bg-red-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              {t.moviesOnly}
+            </button>
+            <button
+              onClick={() => setMediaFilter('tv')}
+              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+                mediaFilter === 'tv'
+                  ? 'bg-red-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              {t.tvOnly}
+            </button>
+          </div>
+        )}
+
+        {/* زر إفراغ السجل أو المفضلة */}
+        {initialType === 'history' && items.length > 0 && (
           <button
-            onClick={() => setMediaFilter('all')}
-            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-              mediaFilter === 'all'
-                ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-            }`}
+            onClick={onClearHistory}
+            className="bg-slate-800 hover:bg-red-600/20 text-gray-300 hover:text-red-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all"
           >
-            {t.allMedia}
+            🗑️ {t.clearHistory}
           </button>
+        )}
+        {initialType === 'watchlist' && items.length > 0 && (
           <button
-            onClick={() => setMediaFilter('movie')}
-            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-              mediaFilter === 'movie'
-                ? 'bg-red-600 text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-            }`}
+            onClick={onClearWatchlist}
+            className="bg-slate-800 hover:bg-red-600/20 text-gray-300 hover:text-red-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all"
           >
-            {t.moviesOnly}
+            💔 {t.clearWatchlist}
           </button>
-          <button
-            onClick={() => setMediaFilter('tv')}
-            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-              mediaFilter === 'tv'
-                ? 'bg-red-600 text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            {t.tvOnly}
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* تصنيفات الأنواع */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {GENRE_CONFIG.map((g) => (
-          <button
-            key={g.id}
-            onClick={() => setSelectedGenre(g.id)}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-              selectedGenre === g.id
-                ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105'
-                : 'bg-slate-900/80 text-gray-300 hover:bg-slate-800 hover:text-white border border-slate-800'
-            }`}
-          >
-            {t.genres[g.key] || g.id}
-          </button>
-        ))}
-      </div>
+      {/* تصنيفات الأنواع (في الأقسام العامة فقط) */}
+      {!isLocalList && initialType !== 'upcoming' && initialType !== 'anime' && initialType !== 'kdrama' && initialType !== 'docs' && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {GENRE_CONFIG.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => setSelectedGenre(g.id)}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
+                selectedGenre === g.id
+                  ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105'
+                  : 'bg-slate-900/80 text-gray-300 hover:bg-slate-800 hover:text-white border border-slate-800'
+              }`}
+            >
+              {t.genres[g.key] || g.id}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* المحتوى */}
       {loading ? (
@@ -224,38 +332,48 @@ export default function CategoryView({ initialType = 'all', title, icon, onSelec
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
             {items.map((item, idx) => (
               <MovieCard
-                key={`${item.id}-${idx}-${item.media_type}`}
+                key={`${item.id}-${idx}-${item.media_type || 'media'}`}
                 item={item}
                 onClick={onSelectMedia}
                 appLang={appLang}
+                isFavorite={watchlist.some((w) => w.id === item.id)}
+                onToggleFavorite={onToggleFavorite}
               />
             ))}
           </div>
 
-          <div className="flex justify-center pt-8 pb-12">
-            <button
-              onClick={handleLoadMore}
-              disabled={loadingMore}
-              className="bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90 disabled:opacity-50 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg shadow-red-600/30 flex items-center gap-2"
-            >
-              {loadingMore ? (
-                <>
-                  <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
-                  <span>{t.loadingMore}</span>
-                </>
-              ) : (
-                <>
-                  <span>{t.loadMore}</span>
-                  <span>⬇️</span>
-                </>
-              )}
-            </button>
-          </div>
+          {!isLocalList && (
+            <div className="flex justify-center pt-8 pb-12">
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90 disabled:opacity-50 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg shadow-red-600/30 flex items-center gap-2 active:scale-95"
+              >
+                {loadingMore ? (
+                  <>
+                    <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+                    <span>{t.loadingMore}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{t.loadMore}</span>
+                    <span>⬇️</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </>
       ) : (
-        <div className="text-center py-20 bg-slate-900/40 rounded-2xl border border-slate-800">
-          <span className="text-5xl">🎬</span>
-          <p className="text-gray-400 mt-3 text-lg">{t.noResults}</p>
+        <div className="text-center py-24 bg-slate-900/40 rounded-3xl border border-slate-800 space-y-3">
+          <span className="text-6xl inline-block animate-bounce">{icon}</span>
+          <p className="text-gray-400 mt-2 text-base">
+            {initialType === 'watchlist' 
+              ? t.emptyWatchlist 
+              : initialType === 'history' 
+              ? t.emptyHistory 
+              : t.noResults}
+          </p>
         </div>
       )}
     </div>
