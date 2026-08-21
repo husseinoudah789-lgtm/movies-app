@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { translations } from '../translations';
 
 export default function MovieCard({ 
@@ -9,91 +9,125 @@ export default function MovieCard({
   onToggleFavorite 
 }) {
   const t = translations[appLang] || translations.ar;
+  const [imageLoaded, setImageLoaded] = useState(false);
   const title = item.title || item.name || 'Untitled';
   const releaseDate = item.release_date || item.first_air_date;
+  const year = releaseDate ? new Date(releaseDate).getFullYear() : '—';
+  
   const imageUrl = item.poster_path 
     ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
-    : 'https://via.placeholder.com/500x750/1e293b/f8fafc?text=No+Poster';
+    : 'https://via.placeholder.com/500x750/0f172a/64748b?text=No+Poster';
   
   // تحديد نوع العمل
   const isTV = item.media_type === 'tv' || (!item.title && !!item.name);
   const mediaTypeText = isTV ? t.tvBadge : t.movieBadge;
-  const badgeColor = isTV ? 'bg-indigo-600/90 text-white' : 'bg-red-600/90 text-white';
+  const badgeColor = isTV ? 'bg-indigo-600/90 text-indigo-100' : 'bg-red-600/90 text-red-100';
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
     if (onToggleFavorite) onToggleFavorite(item);
   };
 
+  const vote = item.vote_average ? Number(item.vote_average).toFixed(1) : 'NEW';
+
   return (
     <div 
       onClick={() => onClick && onClick(item)}
-      className="bg-slate-900/90 border border-slate-800/80 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-red-600/25 hover:-translate-y-2 transition-all duration-300 flex flex-col group cursor-pointer relative"
+      className="group relative bg-slate-900/80 rounded-2xl overflow-hidden border border-slate-800/80 hover:border-red-500/60 shadow-lg hover:shadow-2xl hover:shadow-red-600/20 hover:-translate-y-2 transition-all duration-300 flex flex-col cursor-pointer select-none"
     >
-      
-      {/* بوستر الفيلم/المسلسل */}
-      <div className="relative aspect-[2/3] overflow-hidden bg-slate-800">
+      {/* حاوية البوستر */}
+      <div className="relative aspect-[2/3] overflow-hidden bg-slate-950">
+        
+        {/* شيمر تحميل خفيف قبل ظهور الصورة */}
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-slate-900 animate-pulse flex items-center justify-center">
+            <span className="text-2xl opacity-20">🍿</span>
+          </div>
+        )}
+
         <img 
           src={imageUrl} 
           alt={title} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:brightness-50"
+          onLoad={() => setImageLoaded(true)}
+          className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-50 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
         />
-        
-        {/* ملخص القصة وزر المشاهدة عند التمرير بالماوس */}
-        <div className="absolute inset-0 p-4 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/40">
+
+        {/* شارة جودة العمل (4K / HD) وشارة نوع العمل */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+          <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black backdrop-blur-md shadow-md ${badgeColor}`}>
+            {mediaTypeText}
+          </span>
+          <span className="bg-black/60 backdrop-blur-md text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded text-[9px] font-extrabold w-max">
+            HD
+          </span>
+        </div>
+
+        {/* زر المفضلة التفاعلي السريع ❤️ */}
+        <button
+          onClick={handleFavoriteClick}
+          className={`absolute top-2.5 right-2.5 p-2 rounded-xl backdrop-blur-md transition-all shadow-md z-20 ${
+            isFavorite 
+              ? 'bg-red-600 text-white scale-110 shadow-red-600/50' 
+              : 'bg-black/60 text-gray-300 hover:text-red-400 hover:scale-110 hover:bg-black/80'
+          }`}
+          title={isFavorite ? t.removeFromWatchlist : t.addToWatchlist}
+          aria-label="Favorite"
+        >
+          <span className="text-xs block">{isFavorite ? '❤️' : '🤍'}</span>
+        </button>
+
+        {/* شارة التقييم بالنجوم الذهبية */}
+        <div className="absolute bottom-2.5 right-2.5 bg-slate-950/90 border border-amber-400/30 px-2 py-0.5 rounded-lg text-[11px] font-black text-amber-400 flex items-center gap-1 backdrop-blur-md shadow-md z-10">
+          <span>⭐</span>
+          <span>{vote}</span>
+        </div>
+
+        {/* طبقة المعلومات المنبثقة عند تمرير الماوس (Hover Overlay) */}
+        <div className="absolute inset-0 p-4 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 text-white bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/40 z-10">
           
-          <div className="flex justify-center pt-2">
-            <span className="bg-red-600 hover:bg-red-500 text-white p-3 rounded-full shadow-lg transform group-hover:scale-110 transition-transform">
+          {/* زر تشغيل متوهج بالمنتصف */}
+          <div className="flex justify-center pt-4">
+            <span className="w-12 h-12 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 text-white flex items-center justify-center shadow-xl shadow-red-600/50 transform group-hover:scale-110 transition-transform text-lg">
               ▶️
             </span>
           </div>
 
-          <div>
-            <p className="text-xs font-bold text-amber-400 mb-1">📖 {t.story}:</p>
-            <p className="line-clamp-4 text-gray-200 leading-relaxed text-[11px]">
+          {/* الملخص ومعلومات العمل السريعة */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+              <span>📖</span>
+              <span>{t.story}:</span>
+            </p>
+            <p className="line-clamp-3 text-gray-200 leading-relaxed text-[10px]">
               {item.overview ? item.overview : t.clickForDetails}
             </p>
-            <div className="mt-3 text-center bg-red-600/90 text-white py-1.5 rounded-lg text-xs font-bold shadow">
-              {t.watchNow}
+            
+            <div className="pt-2">
+              <div className="w-full bg-gradient-to-r from-red-600 to-amber-600 text-white py-1.5 rounded-xl text-center text-xs font-black shadow-lg shadow-red-600/30">
+                {t.watchNow}
+              </div>
             </div>
           </div>
+
         </div>
 
-        {/* زر المفضلة السريع ❤️ */}
-        <button
-          onClick={handleFavoriteClick}
-          className={`absolute top-2 right-2 p-1.5 rounded-xl backdrop-blur-md transition-all shadow-md z-10 ${
-            isFavorite 
-              ? 'bg-red-600 text-white scale-110 shadow-red-600/50' 
-              : 'bg-black/60 text-gray-300 hover:text-red-400 hover:scale-110'
-          }`}
-          title={isFavorite ? t.removeFromWatchlist : t.addToWatchlist}
-        >
-          {isFavorite ? '❤️' : '🤍'}
-        </button>
-
-        {/* التقييم */}
-        <div className="absolute bottom-2 right-2 bg-slate-950/80 px-2 py-0.5 rounded-lg text-xs font-black text-amber-400 flex items-center gap-1 backdrop-blur-md border border-slate-700/50">
-          ⭐ {item.vote_average ? item.vote_average.toFixed(1) : 'NEW'}
-        </div>
-        
-        {/* شارة نوع العمل (فيلم أو مسلسل) */}
-        <div className={`absolute top-2 left-2 ${badgeColor} px-2 py-0.5 rounded-lg text-xs font-bold backdrop-blur-md shadow-md`}>
-          {mediaTypeText}
-        </div>
       </div>
 
-      {/* معلومات البطاقة السفلية */}
-      <div className="p-3.5 flex-1 flex flex-col justify-between bg-slate-900/60">
+      {/* معلومات البطاقة السفلية (العنوان والسنة) */}
+      <div className="p-3.5 flex-1 flex flex-col justify-between bg-slate-900/90 border-t border-slate-800/60">
         <div>
-          <h3 className="font-bold text-sm sm:text-base text-white line-clamp-1 group-hover:text-red-400 transition-colors" title={title}>
+          <h3 
+            className="font-bold text-xs sm:text-sm text-white line-clamp-1 group-hover:text-red-400 transition-colors" 
+            title={title}
+          >
             {title}
           </h3>
-          <div className="flex justify-between items-center text-xs text-gray-400 mt-2 pt-2 border-t border-slate-800">
-            <span>{t.releaseYear}</span>
-            <span className="text-gray-200 font-semibold bg-slate-800 px-2 py-0.5 rounded">
-              {releaseDate ? new Date(releaseDate).getFullYear() : '—'}
+          
+          <div className="flex justify-between items-center text-[11px] text-gray-400 mt-2 pt-2 border-t border-slate-800/60">
+            <span className="text-gray-400">{t.releaseYear}</span>
+            <span className="text-gray-200 font-semibold bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700/50">
+              {year}
             </span>
           </div>
         </div>

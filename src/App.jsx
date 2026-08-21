@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import HeroSpotlight from './components/HeroSpotlight';
 import MovieCard from './components/MovieCard';
 import CategoryView from './components/CategoryView';
 import MediaModal from './components/MediaModal';
@@ -230,9 +231,9 @@ function App() {
       data: watchHistory,
       mediaType: null
     }] : []),
-    { id: 'trending', tabTarget: 'home', title: t.sections.trending, icon: '🔥', data: trending, mediaType: null },
     { id: 'arabic_movies', tabTarget: 'arabic_movies', title: t.sections.arabicMovies, icon: '🇪🇬', data: arabicMovies, mediaType: 'movie' },
     { id: 'arabic_tv', tabTarget: 'arabic_tv', title: t.sections.arabicTV, icon: '📺', data: arabicTV, mediaType: 'tv' },
+    { id: 'trending', tabTarget: 'home', title: t.sections.trending, icon: '🔥', data: trending, mediaType: null },
     { id: 'movies', tabTarget: 'movies', title: t.sections.movies, icon: '🎬', data: movies, mediaType: 'movie' },
     { id: 'tv', tabTarget: 'tv', title: t.sections.tv, icon: '📺', data: tvShows, mediaType: 'tv' },
     { id: 'anime', tabTarget: 'anime', title: t.sections.anime, icon: '🎌', data: anime, mediaType: 'tv' },
@@ -246,10 +247,15 @@ function App() {
 
   return (
     <div 
-      className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-red-600 selection:text-white transition-all duration-300" 
+      className="min-h-screen bg-[#030712] text-slate-100 font-sans selection:bg-red-600 selection:text-white transition-all duration-300 relative overflow-x-hidden" 
       dir={t.dir}
     >
-      {/* شريط التنقل العلوي */}
+      {/* خلفيات التوهج المحيطي الجمالية (Ambient Glows) */}
+      <div className="fixed top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full filter blur-[140px] pointer-events-none -z-10"></div>
+      <div className="fixed top-1/3 right-10 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[140px] pointer-events-none -z-10"></div>
+      <div className="fixed bottom-10 left-10 w-96 h-96 bg-indigo-600/10 rounded-full filter blur-[160px] pointer-events-none -z-10"></div>
+
+      {/* شريط التنقل العلوي الفاخر */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -265,22 +271,22 @@ function App() {
         historyCount={watchHistory.length}
       />
       
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+      <main className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl relative z-10">
         {/* حالة البحث */}
         {searchQuery ? (
-          <section className="space-y-6">
-            <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 shadow-xl">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <span>🔍</span>
-                <span>{t.searchResultsFor} <span className="text-red-500">"{searchQuery}"</span></span>
+          <section className="space-y-6 animate-fadeIn">
+            <div className="bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl">
+              <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
+                <span className="text-3xl">🔍</span>
+                <span>{t.searchResultsFor} <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400">"{searchQuery}"</span></span>
               </h2>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-gray-400 text-xs sm:text-sm mt-1.5 font-medium">
                 {searchResults.length} {t.foundResults}
               </p>
             </div>
 
             {searchResults.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
                 {searchResults.map(item => (
                   <MovieCard 
                     key={item.id} 
@@ -293,26 +299,39 @@ function App() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 bg-slate-900/40 rounded-2xl border border-slate-800">
-                <span className="text-5xl">🧐</span>
-                <p className="text-gray-400 text-lg mt-3">{t.noResults}</p>
+              <div className="text-center py-24 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-800/80 space-y-3">
+                <span className="text-6xl inline-block animate-bounce">🧐</span>
+                <p className="text-gray-400 text-lg font-bold">{t.noResults}</p>
               </div>
             )}
           </section>
         ) : activeTab === 'home' ? (
           /* الصفحة الرئيسية */
           loading ? (
-            <div className="flex flex-col justify-center items-center h-96 gap-4">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-red-500"></div>
-              <p className="text-gray-400 text-sm animate-pulse">{t.loading}</p>
+            <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full border-4 border-slate-800 border-t-red-500 animate-spin"></div>
+                <span className="absolute inset-0 flex items-center justify-center text-2xl">🍿</span>
+              </div>
+              <p className="text-gray-400 text-sm font-bold animate-pulse">{t.loading}</p>
             </div>
           ) : (
-            <div className="space-y-12">
+            <div className="space-y-12 animate-fadeIn">
+              {/* بانر البطل السينمائي (Hero Spotlight) */}
+              <HeroSpotlight 
+                items={trending.length > 0 ? trending : movies} 
+                onSelectMedia={(selected) => setSelectedMedia(selected)}
+                appLang={appLang}
+                watchlist={watchlist}
+                onToggleFavorite={handleToggleFavorite}
+              />
+
+              {/* أقسام الصفحة الرئيسية */}
               {homeSections.map((section) => (
                 <section key={section.id} className="space-y-4">
-                  <div className="flex justify-between items-center bg-slate-900/80 px-5 py-3 rounded-xl border border-slate-800 shadow">
-                    <h2 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
-                      <span>{section.icon}</span>
+                  <div className="flex justify-between items-center bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-slate-900/40 backdrop-blur-xl px-5 py-3.5 rounded-2xl border border-slate-800/80 shadow-lg">
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white flex items-center gap-2.5">
+                      <span className="text-2xl p-1.5 rounded-xl bg-slate-800/60 border border-slate-700/50">{section.icon}</span>
                       <span>{section.title}</span>
                     </h2>
                     {section.tabTarget !== 'home' && (
@@ -321,7 +340,7 @@ function App() {
                           setActiveTab(section.tabTarget);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-1"
+                        className="text-amber-400 hover:text-white bg-slate-800/80 hover:bg-gradient-to-r hover:from-red-600 hover:to-amber-600 px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 shadow border border-slate-700/60"
                       >
                         <span>{t.browseSection}</span>
                         <span>{t.dir === 'rtl' ? '←' : '→'}</span>
@@ -329,7 +348,7 @@ function App() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-5">
                     {section.data.slice(0, 6).map((item) => (
                       <MovieCard 
                         key={`${item.id}-${section.id}`} 
@@ -350,49 +369,51 @@ function App() {
           )
         ) : (
           /* صفحات الأقسام المخصصة */
-          <CategoryView 
-            initialType={activeTab} 
-            title={
-              activeTab === 'arabic' ? t.arabic :
-              activeTab === 'arabic_movies' ? t.arabicMovies :
-              activeTab === 'arabic_tv' ? t.arabicTV :
-              activeTab === 'movies' ? t.movies :
-              activeTab === 'tv' ? t.tv :
-              activeTab === 'anime' ? t.anime :
-              activeTab === 'kdrama' ? t.kdrama :
-              activeTab === 'action' ? t.action :
-              activeTab === 'upcoming' ? t.upcoming :
-              activeTab === 'top_rated' ? t.topRated :
-              activeTab === 'family' ? t.family :
-              activeTab === 'docs' ? t.docs :
-              activeTab === 'watchlist' ? t.watchlist :
-              activeTab === 'history' ? t.history :
-              t.appName
-            } 
-            icon={
-              activeTab === 'arabic' || activeTab === 'arabic_movies' ? '🇪🇬' :
-              activeTab === 'arabic_tv' ? '📺' :
-              activeTab === 'movies' ? '🎬' :
-              activeTab === 'tv' ? '📺' :
-              activeTab === 'anime' ? '🎌' :
-              activeTab === 'kdrama' ? '🎎' :
-              activeTab === 'action' ? '💥' :
-              activeTab === 'upcoming' ? '🍿' :
-              activeTab === 'top_rated' ? '⭐' :
-              activeTab === 'family' ? '👨‍👩‍👧‍👦' :
-              activeTab === 'docs' ? '🌍' :
-              activeTab === 'watchlist' ? '❤️' :
-              activeTab === 'history' ? '⏱️' :
-              '🍿'
-            } 
-            onSelectMedia={(selected) => setSelectedMedia(selected)}
-            appLang={appLang}
-            watchlist={watchlist}
-            watchHistory={watchHistory}
-            onToggleFavorite={handleToggleFavorite}
-            onClearHistory={handleClearHistory}
-            onClearWatchlist={handleClearWatchlist}
-          />
+          <div className="animate-fadeIn">
+            <CategoryView 
+              initialType={activeTab} 
+              title={
+                activeTab === 'arabic' ? t.arabic :
+                activeTab === 'arabic_movies' ? t.arabicMovies :
+                activeTab === 'arabic_tv' ? t.arabicTV :
+                activeTab === 'movies' ? t.movies :
+                activeTab === 'tv' ? t.tv :
+                activeTab === 'anime' ? t.anime :
+                activeTab === 'kdrama' ? t.kdrama :
+                activeTab === 'action' ? t.action :
+                activeTab === 'upcoming' ? t.upcoming :
+                activeTab === 'top_rated' ? t.topRated :
+                activeTab === 'family' ? t.family :
+                activeTab === 'docs' ? t.docs :
+                activeTab === 'watchlist' ? t.watchlist :
+                activeTab === 'history' ? t.history :
+                t.appName
+              } 
+              icon={
+                activeTab === 'arabic' || activeTab === 'arabic_movies' ? '🇪🇬' :
+                activeTab === 'arabic_tv' ? '📺' :
+                activeTab === 'movies' ? '🎬' :
+                activeTab === 'tv' ? '📺' :
+                activeTab === 'anime' ? '🎌' :
+                activeTab === 'kdrama' ? '🎎' :
+                activeTab === 'action' ? '💥' :
+                activeTab === 'upcoming' ? '🍿' :
+                activeTab === 'top_rated' ? '⭐' :
+                activeTab === 'family' ? '👨‍👩‍👧‍👦' :
+                activeTab === 'docs' ? '🌍' :
+                activeTab === 'watchlist' ? '❤️' :
+                activeTab === 'history' ? '⏱️' :
+                '🍿'
+              } 
+              onSelectMedia={(selected) => setSelectedMedia(selected)}
+              appLang={appLang}
+              watchlist={watchlist}
+              watchHistory={watchHistory}
+              onToggleFavorite={handleToggleFavorite}
+              onClearHistory={handleClearHistory}
+              onClearWatchlist={handleClearWatchlist}
+            />
+          </div>
         )}
       </main>
 
@@ -430,9 +451,24 @@ function App() {
         appLang={appLang}
       />
 
-      {/* Footer */}
-      <footer className="mt-20 border-t border-slate-800 bg-slate-900/80 py-8 text-center text-sm text-gray-500">
-        <p>{t.footerText}</p>
+      {/* Footer الفاخر مع توهج سفلي */}
+      <footer className="mt-24 border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-xl py-10 text-center text-xs sm:text-sm text-gray-500 relative">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🍿</span>
+            <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 text-base">
+              {t.appName}
+            </span>
+          </div>
+          <p className="text-gray-400">{t.footerText}</p>
+          <div className="flex items-center gap-4 text-gray-400 text-xs">
+            <span>4K Ultra HD</span>
+            <span>•</span>
+            <span>Dolby Vision</span>
+            <span>•</span>
+            <span>2026 VIP</span>
+          </div>
+        </div>
       </footer>
     </div>
   );

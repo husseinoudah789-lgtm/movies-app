@@ -110,22 +110,25 @@ export default function MediaModal({
   const totalEpisodesInSeason = currentSeasonData?.episode_count || 10;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
       <div className="fixed inset-0" onClick={onClose}></div>
 
       <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-700/80 rounded-3xl overflow-hidden shadow-2xl z-10 my-auto">
         
-        {/* زر الإغلاق */}
+        {/* زر الإغلاق السينمائي */}
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 z-20 bg-slate-800/90 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-md transition-all shadow-lg text-lg"
+          className="absolute top-4 left-4 z-30 bg-slate-900/80 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-md border border-slate-700/60 transition-all shadow-xl text-lg group"
           title="إغلاق"
         >
-          ✕
+          <span className="group-hover:rotate-90 transition-transform duration-200">✕</span>
         </button>
 
-        {/* مشغل الفيديو */}
-        <div className="relative aspect-video w-full bg-black">
+        {/* مشغل الفيديو مع توهج خلفي */}
+        <div className="relative aspect-video w-full bg-black shadow-inner">
+          {/* Ambient light glow behind player */}
+          <div className="absolute inset-0 bg-red-600/10 filter blur-3xl pointer-events-none -z-10"></div>
+          
           {getVideoSrc() ? (
             <iframe
               key={`${activeServer}-${selectedSeason}-${selectedEpisode}-${selectedLang}`}
@@ -136,7 +139,8 @@ export default function MediaModal({
               allowFullScreen
             ></iframe>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+              <span className="text-4xl">🎬</span>
               <span>لا يوجد مشغل متوفر حالياً.</span>
             </div>
           )}
@@ -170,7 +174,7 @@ export default function MediaModal({
         {/* إشعار الترجمة المفعلة */}
         <div className="bg-slate-950/90 px-4 py-2 border-b border-slate-800/80 flex items-center justify-between text-xs text-gray-400">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
             <span className="text-gray-300">
               {t.subActive} <strong className="text-amber-400">{currentLangObj.label} {currentLangObj.flag}</strong>
             </span>
@@ -181,11 +185,11 @@ export default function MediaModal({
         </div>
 
         {/* أزرار السيرفرات والمفضلة والمواسم */}
-        <div className="bg-slate-950 p-4 border-b border-slate-800 space-y-4">
+        <div className="bg-slate-950 p-4 sm:p-5 border-b border-slate-800 space-y-4">
           
           {/* اختيار السيرفر وزر المفضلة */}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-sm text-gray-300 font-bold">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-300 font-bold">
               <span>📡 {t.servers}:</span>
             </div>
             
@@ -197,7 +201,7 @@ export default function MediaModal({
                 className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
                   isFavorite
                     ? 'bg-red-600 text-white shadow-lg shadow-red-600/40'
-                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-red-400'
+                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-red-400 border border-slate-700'
                 }`}
               >
                 <span>{isFavorite ? '❤️' : '🤍'}</span>
@@ -208,8 +212,8 @@ export default function MediaModal({
                 onClick={() => setActiveServer('vidlink')}
                 className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                   activeServer === 'vidlink'
-                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
-                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
                 ⚡ سيرفر 1 (VIP)
@@ -218,8 +222,8 @@ export default function MediaModal({
                 onClick={() => setActiveServer('multiembed')}
                 className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                   activeServer === 'multiembed'
-                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
-                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
                 💬 سيرفر 2
@@ -228,8 +232,8 @@ export default function MediaModal({
                 onClick={() => setActiveServer('vidsrc')}
                 className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                   activeServer === 'vidsrc'
-                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
-                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
                 🚀 سيرفر 3
@@ -239,8 +243,8 @@ export default function MediaModal({
                   onClick={() => setActiveServer('trailer')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1 ${
                     activeServer === 'trailer'
-                      ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30'
-                      : 'bg-slate-800 text-amber-400 hover:bg-slate-700'
+                      ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 font-black'
+                      : 'bg-slate-800 text-amber-400 hover:bg-slate-700 border border-slate-700/60'
                   }`}
                 >
                   <span>▶️</span>
@@ -264,10 +268,10 @@ export default function MediaModal({
                         setSelectedSeason(season.season_number);
                         setSelectedEpisode(1);
                       }}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                         selectedSeason === season.season_number
-                          ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                          ? 'bg-indigo-600 text-white shadow-md scale-105'
+                          : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/50'
                       }`}
                     >
                       {t.season} {season.season_number}
@@ -281,10 +285,10 @@ export default function MediaModal({
                   <button
                     key={ep}
                     onClick={() => setSelectedEpisode(ep)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center shrink-0 ${
+                    className={`w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center shrink-0 ${
                       selectedEpisode === ep
-                        ? 'bg-red-600 text-white shadow-md scale-105'
-                        : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                        ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md scale-105 font-black'
+                        : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/50'
                     }`}
                   >
                     {ep}
@@ -299,7 +303,7 @@ export default function MediaModal({
         {/* تفاصيل العمل */}
         {loading ? (
           <div className="flex flex-col items-center justify-center h-48 gap-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-red-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
             <p className="text-gray-400 text-xs animate-pulse">{t.loading}</p>
           </div>
         ) : (
@@ -308,11 +312,11 @@ export default function MediaModal({
               
               {/* البوستر */}
               {posterUrl && (
-                <div className="w-32 sm:w-40 shrink-0 mx-auto md:mx-0">
+                <div className="w-32 sm:w-44 shrink-0 mx-auto md:mx-0">
                   <img
                     src={posterUrl}
                     alt={title}
-                    className="w-full rounded-2xl shadow-xl border border-slate-700/80 aspect-[2/3] object-cover"
+                    className="w-full rounded-2xl shadow-2xl border border-slate-700/80 aspect-[2/3] object-cover"
                   />
                 </div>
               )}
@@ -321,11 +325,11 @@ export default function MediaModal({
               <div className="flex-1 space-y-4 text-center md:text-right">
                 <div>
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${isTV ? 'bg-indigo-600 text-white' : 'bg-red-600 text-white'}`}>
+                    <span className={`px-2.5 py-1 rounded-xl text-xs font-black ${isTV ? 'bg-indigo-600 text-white' : 'bg-red-600 text-white'}`}>
                       {isTV ? t.tvBadge : t.movieBadge}
                     </span>
                     {details?.genres?.map((g) => (
-                      <span key={g.id} className="bg-slate-800 text-gray-300 px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-700">
+                      <span key={g.id} className="bg-slate-800 text-gray-300 px-2.5 py-1 rounded-xl text-xs font-semibold border border-slate-700">
                         {g.name}
                       </span>
                     ))}
@@ -338,20 +342,20 @@ export default function MediaModal({
                 </div>
 
                 {/* إحصائيات سريعة */}
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs sm:text-sm text-gray-300 font-semibold">
-                  <span className="flex items-center gap-1 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs sm:text-sm text-gray-300 font-semibold">
+                  <span className="flex items-center gap-1 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-xl border border-amber-400/20">
                     ⭐ {details?.vote_average?.toFixed(1) || 'N/A'} ({details?.vote_count || 0})
                   </span>
-                  <span className="bg-slate-800 px-2.5 py-1 rounded-lg">
+                  <span className="bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-700/50">
                     📅 {releaseDate ? new Date(releaseDate).getFullYear() : '—'}
                   </span>
                   {details?.runtime ? (
-                    <span className="bg-slate-800 px-2.5 py-1 rounded-lg">
+                    <span className="bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-700/50">
                       ⏱️ {details.runtime} min
                     </span>
                   ) : null}
                   {isTV && details?.number_of_seasons ? (
-                    <span className="bg-slate-800 px-2.5 py-1 rounded-lg">
+                    <span className="bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-700/50">
                       📂 {details.number_of_seasons} {t.seasons} ({details.number_of_episodes} {t.episodes})
                     </span>
                   ) : null}
@@ -363,7 +367,7 @@ export default function MediaModal({
                     <span>📖</span>
                     <span>{t.story} ({currentLangObj.label}):</span>
                   </h3>
-                  <p className="text-gray-300 text-sm leading-relaxed">
+                  <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">
                     {details?.overview ? details.overview : t.noOverview}
                   </p>
                 </div>
@@ -371,10 +375,10 @@ export default function MediaModal({
                 {/* طاقم التمثيل */}
                 {details?.credits?.cast?.length > 0 && (
                   <div className="pt-2">
-                    <h3 className="text-sm font-bold text-gray-300 mb-2">🎭 {t.actors}:</h3>
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-300 mb-2.5">🎭 {t.actors}:</h3>
                     <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none justify-center md:justify-start">
-                      {details.credits.cast.slice(0, 7).map((actor) => (
-                        <div key={actor.id} className="text-center shrink-0 w-16">
+                      {details.credits.cast.slice(0, 8).map((actor) => (
+                        <div key={actor.id} className="text-center shrink-0 w-16 group">
                           <img
                             src={
                               actor.profile_path
@@ -382,7 +386,7 @@ export default function MediaModal({
                                 : 'https://via.placeholder.com/185x185/1e293b/94a3b8?text=?'
                             }
                             alt={actor.name}
-                            className="w-12 h-12 rounded-full object-cover mx-auto mb-1 border border-slate-700"
+                            className="w-12 h-12 rounded-full object-cover mx-auto mb-1 border-2 border-slate-700 group-hover:border-red-500 transition-colors shadow"
                           />
                           <p className="text-[10px] text-white font-bold truncate">{actor.name}</p>
                           <p className="text-[9px] text-gray-400 truncate">{actor.character}</p>
