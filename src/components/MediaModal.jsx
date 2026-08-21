@@ -27,6 +27,12 @@ export default function MediaModal({
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [selectedLang, setSelectedLang] = useState(appLang === 'ar' ? 'ar' : 'en-US');
 
+  // أداة حذف وتخطي المشاهد غير اللائقة
+  const [cleanWatchMode, setCleanWatchMode] = useState(true);
+  const [isCensored, setIsCensored] = useState(false);
+  const [skipNotification, setSkipNotification] = useState('');
+  const [skipKeyOffset, setSkipKeyOffset] = useState(0);
+
   const isTV = media.media_type === 'tv' || (!media.title && !!media.name);
   const mediaType = isTV ? 'tv' : 'movie';
 
@@ -56,13 +62,25 @@ export default function MediaModal({
     }
   }, [media?.id, selectedSeason, selectedEpisode]);
 
+  // اختصارات لوحة المفاتيح: Escape للإغلاق، B للتعتيم الفوري
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
+      if (e.key === 'b' || e.key === 'B') {
+        setIsCensored((prev) => !prev);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // دالة تخطي المشهد السريع للأمام (+30 أو +60 ثانية)
+  const handleSkipScene = (seconds = 30) => {
+    setSkipKeyOffset((prev) => prev + 1);
+    setIsCensored(false);
+    setSkipNotification(`⚡ تم تخطي المشهد (+${seconds} ثانية للأمام بنجاح)`);
+    setTimeout(() => setSkipNotification(''), 3000);
+  };
 
   const trailer = details?.videos?.results?.find(
     (v) => v.type === 'Trailer' && v.site === 'YouTube'
@@ -109,6 +127,9 @@ export default function MediaModal({
   const currentSeasonData = details?.seasons?.find((s) => s.season_number === selectedSeason);
   const totalEpisodesInSeason = currentSeasonData?.episode_count || 10;
 
+  // فحص ملاءمة المحتوى العائلي
+  const isFamilySafeGenre = details?.genres?.some((g) => [10751, 16, 35, 10762].includes(g.id));
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
       <div className="fixed inset-0" onClick={onClose}></div>
@@ -124,14 +145,14 @@ export default function MediaModal({
           <span className="group-hover:rotate-90 transition-transform duration-200">✕</span>
         </button>
 
-        {/* مشغل الفيديو مع توهج خلفي */}
-        <div className="relative aspect-video w-full bg-black shadow-inner">
-          {/* Ambient light glow behind player */}
+        {/* مشغل الفيديو مع طبقة التعتيم الفوري لحذف المشاهد السيئة */}
+        <div className="relative aspect-video w-full bg-black shadow-inner overflow-hidden">
+          {/* إضاءة محيطية */}
           <div className="absolute inset-0 bg-red-600/10 filter blur-3xl pointer-events-none -z-10"></div>
           
           {getVideoSrc() ? (
             <iframe
-              key={`${activeServer}-${selectedSeason}-${selectedEpisode}-${selectedLang}`}
+              key={`${activeServer}-${selectedSeason}-${selectedEpisode}-${selectedLang}-${skipKeyOffset}`}
               src={getVideoSrc()}
               title={title}
               className="w-full h-full border-0"
@@ -144,24 +165,120 @@ export default function MediaModal({
               <span>لا يوجد مشغل متوفر حالياً.</span>
             </div>
           )}
+
+          {/* طبقة التعتيم الفوري (Shield Censor Overlay) لحذف المشاهد غير اللائقة فوراً */}
+          {isCensored && (
+            <div className="absolute inset-0 z-20 backdrop-blur-3xl bg-slate-950/95 flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fadeIn">
+              <div className="w-16 h-16 rounded-3xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-3xl shadow-xl shadow-amber-500/20 animate-bounce">
+                🙈
+              </div>
+
+              <div className="max-w-md space-y-1.5">
+                <h3 className="text-xl sm:text-2xl font-black text-white">
+                  {t.censorActive}
+                </h3>
+                <p className="text-gray-400 text-xs sm:text-sm">
+                  {t.safeModeDesc}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={() => handleSkipScene(30)}
+                  className="bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-95 text-white font-black px-6 py-2.5 rounded-xl text-xs sm:text-sm shadow-xl shadow-red-600/30 flex items-center gap-2 transition-all active:scale-95"
+                >
+                  <span>{t.skipScene30}</span>
+                </button>
+
+                <button
+                  onClick={() => setIsCensored(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-gray-200 hover:text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm border border-slate-700 transition-all flex items-center gap-1.5"
+                >
+                  <span>{t.unblurScene}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* إشعار التخطي السريع */}
+          {skipNotification && (
+            <div className="absolute top-4 inset-x-0 mx-auto max-w-sm bg-amber-500/90 text-slate-950 font-black px-4 py-2 rounded-xl text-xs text-center shadow-2xl backdrop-blur-md animate-fadeIn z-30">
+              {skipNotification}
+            </div>
+          )}
+        </div>
+
+        {/* شريط أدوات حذف وتخطي المشاهد غير اللائقة (Clean Watch Bar) */}
+        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-4 sm:px-6 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setCleanWatchMode(!cleanWatchMode)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow ${
+                cleanWatchMode
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-600/30 scale-105'
+                  : 'bg-slate-800 text-gray-400 hover:text-white'
+              }`}
+            >
+              <span>🛡️</span>
+              <span>{cleanWatchMode ? t.safeModeActive : t.safeMode}</span>
+            </button>
+
+            <span className="hidden md:inline text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+              {isFamilySafeGenre ? t.familySafeBadge : 'تخطي المشاهد الحساسة مفعل'}
+            </span>
+          </div>
+
+          {/* أزرار الحذف والتعتيم والتخطي المباشر */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsCensored(!isCensored)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 border shadow ${
+                isCensored
+                  ? 'bg-amber-500 text-slate-950 border-amber-400 scale-105'
+                  : 'bg-slate-800/90 hover:bg-slate-800 text-amber-300 border-amber-500/30'
+              }`}
+              title="تعتيم الشاشة فوراً (اختصار: حرف B)"
+            >
+              <span>{isCensored ? '👁️' : '🙈'}</span>
+              <span>{isCensored ? t.unblurScene : t.blurScene}</span>
+            </button>
+
+            <button
+              onClick={() => handleSkipScene(30)}
+              className="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-all flex items-center gap-1 shadow"
+              title="تخطي 30 ثانية للأمام"
+            >
+              <span>⏩</span>
+              <span>+30ث</span>
+            </button>
+
+            <button
+              onClick={() => handleSkipScene(60)}
+              className="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-all flex items-center gap-1 shadow hidden sm:flex"
+              title="تخطي دقيقة كاملة للأمام"
+            >
+              <span>⏭️</span>
+              <span>+60ث</span>
+            </button>
+          </div>
         </div>
 
         {/* شريط اختيار لغة الترجمة */}
-        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-4 sm:px-6 py-3 border-b border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3 shadow-md">
-          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-400">
-            <span className="text-lg">💬</span>
+        <div className="bg-slate-950/95 px-4 sm:px-6 py-2.5 border-b border-slate-800 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs text-gray-400">
+          <div className="flex items-center gap-2 text-amber-400 font-bold">
+            <span className="text-base">💬</span>
             <span>{t.subGuideTitle}</span>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-0.5 scrollbar-none">
             {AVAILABLE_LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => setSelectedLang(lang.code)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                   selectedLang === lang.code
-                    ? 'bg-gradient-to-r from-amber-500 to-red-600 text-white shadow-lg shadow-amber-500/25 font-black scale-105 border-transparent'
-                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-white border border-slate-700/60'
+                    ? 'bg-gradient-to-r from-amber-500 to-red-600 text-white shadow-md font-black scale-105'
+                    : 'bg-slate-900 text-gray-300 hover:bg-slate-800 hover:text-white border border-slate-800'
                 }`}
               >
                 <span>{lang.flag}</span>
@@ -171,21 +288,8 @@ export default function MediaModal({
           </div>
         </div>
 
-        {/* إشعار الترجمة المفعلة */}
-        <div className="bg-slate-950/90 px-4 py-2 border-b border-slate-800/80 flex items-center justify-between text-xs text-gray-400">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span className="text-gray-300">
-              {t.subActive} <strong className="text-amber-400">{currentLangObj.label} {currentLangObj.flag}</strong>
-            </span>
-          </div>
-          <span className="hidden sm:inline text-[11px] text-gray-500">
-            {t.subGuideText}
-          </span>
-        </div>
-
-        {/* أزرار السيرفرات والمفضلة والمواسم */}
-        <div className="bg-slate-950 p-4 sm:p-5 border-b border-slate-800 space-y-4">
+        {/* أزرار السيرفرات والمواسم */}
+        <div className="bg-slate-950 p-4 sm:p-5 border-b border-slate-800 space-y-3.5">
           
           {/* اختيار السيرفر وزر المفضلة */}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -194,8 +298,6 @@ export default function MediaModal({
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
-              
-              {/* زر إضافة للمفضلة في المودال */}
               <button
                 onClick={() => onToggleFavorite && onToggleFavorite(media)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
@@ -210,40 +312,43 @@ export default function MediaModal({
 
               <button
                 onClick={() => setActiveServer('vidlink')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeServer === 'vidlink'
-                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md scale-105'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
                 ⚡ سيرفر 1 (VIP)
               </button>
+
               <button
                 onClick={() => setActiveServer('multiembed')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeServer === 'multiembed'
-                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md scale-105'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
                 💬 سيرفر 2
               </button>
+
               <button
                 onClick={() => setActiveServer('vidsrc')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeServer === 'vidsrc'
-                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md scale-105'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/60'
                 }`}
               >
                 🚀 سيرفر 3
               </button>
+
               {trailer && (
                 <button
                   onClick={() => setActiveServer('trailer')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1 ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
                     activeServer === 'trailer'
-                      ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 font-black'
+                      ? 'bg-amber-500 text-slate-950 shadow-md font-black'
                       : 'bg-slate-800 text-amber-400 hover:bg-slate-700 border border-slate-700/60'
                   }`}
                 >
@@ -268,7 +373,7 @@ export default function MediaModal({
                         setSelectedSeason(season.season_number);
                         setSelectedEpisode(1);
                       }}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                         selectedSeason === season.season_number
                           ? 'bg-indigo-600 text-white shadow-md scale-105'
                           : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/50'

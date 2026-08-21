@@ -36,6 +36,12 @@ function App() {
   const [watchlist, setWatchlist] = useState([]);
   const [watchHistory, setWatchHistory] = useState([]);
 
+  // وضع المشاهدة العائلية النظيفة (حذف وتخطي المشاهد غير اللائقة)
+  const [isSafeMode, setIsSafeMode] = useState(() => {
+    const saved = localStorage.getItem('cinema_plus_safe_mode');
+    return saved !== null ? saved === 'true' : true;
+  });
+
   const [activeTab, setActiveTab] = useState('home');
   const [selectedMedia, setSelectedMedia] = useState(null);
 
@@ -56,6 +62,15 @@ function App() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // تبديل وضع المشاهدة العائلية النظيفة
+  const handleToggleSafeMode = () => {
+    setIsSafeMode((prev) => {
+      const next = !prev;
+      localStorage.setItem('cinema_plus_safe_mode', String(next));
+      return next;
+    });
+  };
 
   // استعادة جلسة المستخدم والمفضلة وسجل المشاهدات عند بدء التطبيق
   useEffect(() => {
@@ -261,7 +276,7 @@ function App() {
       <div className="fixed top-1/3 right-10 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[140px] pointer-events-none -z-10"></div>
       <div className="fixed bottom-10 left-10 w-96 h-96 bg-indigo-600/10 rounded-full filter blur-[160px] pointer-events-none -z-10"></div>
 
-      {/* شريط التنقل العلوي المحسّن */}
+      {/* شريط التنقل العلوي المحسّن مع أداة المشاهدة النظيفة */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -275,6 +290,8 @@ function App() {
         onLogout={handleLogout}
         watchlistCount={watchlist.length}
         historyCount={watchHistory.length}
+        isSafeMode={isSafeMode}
+        onToggleSafeMode={handleToggleSafeMode}
       />
       
       <main className="container mx-auto px-4 sm:px-6 py-5 max-w-7xl relative z-10">
@@ -332,7 +349,7 @@ function App() {
                 onToggleFavorite={handleToggleFavorite}
               />
 
-              {/* شريط التصنيفات السريع في الصفحة الرئيسية (Category Quick Chips) */}
+              {/* شريط التصنيفات السريع في الصفحة الرئيسية */}
               <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
                 {homeSections.map((sec) => (
                   <button
@@ -349,7 +366,7 @@ function App() {
                 ))}
               </div>
 
-              {/* صفوف الأقسام بتمرير أفقي سلس (Netflix / Shahid Row Style) */}
+              {/* صفوف الأقسام بتمرير أفقي سلس */}
               <div className="space-y-10">
                 {homeSections.map((section) => (
                   <SectionRow
@@ -420,7 +437,7 @@ function App() {
         )}
       </main>
 
-      {/* نافذة المشاهدة وعرض التفاصيل التفاعلية */}
+      {/* نافذة المشاهدة وعرض التفاصيل التفاعلية مع أداة المشاهدة النظيفة */}
       {selectedMedia && (
         <MediaModal 
           media={selectedMedia} 
@@ -465,9 +482,9 @@ function App() {
           </div>
           <p className="text-gray-400">{t.footerText}</p>
           <div className="flex items-center gap-4 text-gray-400 text-xs">
-            <span>4K Ultra HD</span>
+            <span>🛡️ وضع المشاهدة النظيفة</span>
             <span>•</span>
-            <span>Dolby Vision</span>
+            <span>4K Ultra HD</span>
             <span>•</span>
             <span>2026 VIP</span>
           </div>

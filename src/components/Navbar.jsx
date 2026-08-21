@@ -13,7 +13,9 @@ export default function Navbar({
   onOpenProfile,
   onLogout,
   watchlistCount = 0,
-  historyCount = 0
+  historyCount = 0,
+  isSafeMode = true,
+  onToggleSafeMode
 }) {
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -70,7 +72,7 @@ export default function Navbar({
         <div className="container mx-auto px-4 sm:px-6 py-2.5">
           <div className="flex items-center justify-between gap-3">
             
-            {/* 1. الشعار وروابط التنقل (بدون أي انقسام في الأسطر) */}
+            {/* 1. الشعار وروابط التنقل */}
             <div className="flex items-center gap-4 xl:gap-6 shrink-0">
               {/* الشعار */}
               <div 
@@ -85,7 +87,7 @@ export default function Navbar({
                 </div>
               </div>
 
-              {/* أزرار الأقسام الرئيسية (سطح المكتب - صف واحد نقي بدون انقسام) */}
+              {/* أزرار الأقسام الرئيسية */}
               <div className="hidden lg:flex items-center gap-1">
                 {navTabs.map((tab) => {
                   const isActive = activeTab === tab.id && !searchQuery;
@@ -121,11 +123,26 @@ export default function Navbar({
               </div>
             </div>
 
-            {/* 2. الأدوات السريعة: البحث والمفضلة واللغة والمستخدم */}
+            {/* 2. الأدوات السريعة: أداة المشاهدة النظيفة والبحث والمفضلة واللغة والمستخدم */}
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               
+              {/* زر تفعيل المشاهدة العائلية النظيفة (حذف المشاهد السيئة) */}
+              <button
+                onClick={onToggleSafeMode}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 border shadow ${
+                  isSafeMode
+                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-emerald-500/20'
+                    : 'bg-slate-900 text-gray-400 border-slate-800 hover:text-gray-200'
+                }`}
+                title={isSafeMode ? 'المشاهدة العائلية النظيفة مفعلة 🛡️' : 'تفعيل المشاهدة العائلية النظيفة'}
+              >
+                <span>🛡️</span>
+                <span className="hidden sm:inline whitespace-nowrap">{isSafeMode ? 'المشاهدة النظيفة' : 'الوضع العائلي'}</span>
+                <span className={`w-2 h-2 rounded-full ${isSafeMode ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`}></span>
+              </button>
+
               {/* مربع البحث الأنيق */}
-              <div className="relative w-32 sm:w-44 md:w-56">
+              <div className="relative w-28 sm:w-40 md:w-52">
                 <input
                   type="text"
                   value={searchQuery}
@@ -299,7 +316,7 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* شريط الأقسام السريع للموبايل (Mobile Sub-bar) */}
+          {/* شريط الأقسام السريع للموبايل */}
           <div className="flex lg:hidden items-center gap-1.5 overflow-x-auto pt-2 pb-0.5 scrollbar-none">
             {navTabs.map((tab) => {
               const isActive = activeTab === tab.id && !searchQuery;
