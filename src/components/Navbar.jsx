@@ -20,15 +20,26 @@ export default function Navbar({
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [categoriesModalOpen, setCategoriesModalOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const t = translations[appLang] || translations.ar;
 
-  // روابط التنقل الرئيسية العلوية
+  // روابط التنقل الرئيسية العلوية للكمبيوتر
   const navTabs = [
     { id: 'home', label: t.home, icon: '🏠' },
     { id: 'arabic', label: t.arabic, icon: '🇪🇬' },
     { id: 'movies', label: t.movies, icon: '🎬' },
     { id: 'tv', label: t.tv, icon: '📺' },
     { id: 'anime', label: t.anime, icon: '🎌' },
+  ];
+
+  // روابط شريط التنقل السفلي للموبايل (Mobile Bottom App Bar)
+  const mobileBottomTabs = [
+    { id: 'home', label: t.home, icon: '🏠' },
+    { id: 'arabic', label: 'عربي', icon: '🇪🇬' },
+    { id: 'movies', label: t.movies, icon: '🎬' },
+    { id: 'tv', label: t.tv, icon: '📺' },
+    { id: 'watchlist', label: t.watchlist, icon: '❤️', badge: watchlistCount },
+    { id: 'categories', label: t.categories, icon: '✨' },
   ];
 
   // جميع الأقسام لنافذة التصنيفات
@@ -60,34 +71,39 @@ export default function Navbar({
   const currentLang = languages.find((l) => l.code === appLang) || languages[0];
 
   const handleSelectTab = (tabId) => {
+    if (tabId === 'categories') {
+      setCategoriesModalOpen(true);
+      return;
+    }
     setActiveTab(tabId);
     onSearch('');
     setCategoriesModalOpen(false);
+    setMobileSearchOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <>
-      <nav className="bg-[#0f111a]/95 backdrop-blur-2xl sticky top-0 z-40 border-b border-orange-500/20 shadow-2xl shadow-orange-950/20">
-        <div className="container mx-auto px-4 sm:px-6 py-2.5">
-          <div className="flex items-center justify-between gap-3">
+      {/* 1. شريط التنقل العلوي المتجاوب للهواتف والحواسيب */}
+      <nav className="bg-[#0f111a]/95 backdrop-blur-2xl sticky top-0 z-40 border-b border-orange-500/20 shadow-2xl shadow-orange-950/20 pt-[env(safe-area-inset-top)]">
+        <div className="container mx-auto px-3 sm:px-6 py-2 sm:py-2.5">
+          <div className="flex items-center justify-between gap-2 sm:gap-3">
             
-            {/* 1. الشعار وروابط التنقل */}
-            <div className="flex items-center gap-4 xl:gap-6 shrink-0">
-              {/* الشعار */}
+            {/* الشعار وروابط التنقل للكمبيوتر */}
+            <div className="flex items-center gap-3 lg:gap-6 shrink-0">
               <div 
-                className="flex items-center gap-2.5 cursor-pointer select-none group shrink-0"
+                className="flex items-center gap-2 cursor-pointer select-none group shrink-0"
                 onClick={() => handleSelectTab('home')}
               >
                 <span className="text-2xl sm:text-3xl filter drop-shadow group-hover:scale-110 transition-transform">🍿</span>
                 <div>
-                  <h1 className="text-lg sm:text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-white tracking-tight whitespace-nowrap drop-shadow">
+                  <h1 className="text-base sm:text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-white tracking-tight whitespace-nowrap drop-shadow">
                     {t.appName}
                   </h1>
                 </div>
               </div>
 
-              {/* أزرار الأقسام الرئيسية */}
+              {/* أزرار الشاشات الكبيرة */}
               <div className="hidden lg:flex items-center gap-1">
                 {navTabs.map((tab) => {
                   const isActive = activeTab === tab.id && !searchQuery;
@@ -107,7 +123,6 @@ export default function Navbar({
                   );
                 })}
 
-                {/* زر استعراض باقي الأقسام والتصنيفات */}
                 <button
                   onClick={() => setCategoriesModalOpen(true)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
@@ -123,26 +138,35 @@ export default function Navbar({
               </div>
             </div>
 
-            {/* 2. الأدوات السريعة */}
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* أدوات البحث والحساب واللغة */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
               
               {/* زر تفعيل المشاهدة العائلية النظيفة */}
               <button
                 onClick={onToggleSafeMode}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 border shadow ${
+                className={`p-1.5 sm:px-3 sm:py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1 sm:gap-1.5 border shadow ${
                   isSafeMode
-                    ? 'bg-orange-950/80 text-orange-300 border-orange-500/50 shadow-orange-500/20'
+                    ? 'bg-orange-950/90 text-orange-300 border-orange-500/50 shadow-orange-500/20'
                     : 'bg-slate-900 text-gray-400 border-slate-800 hover:text-gray-200'
                 }`}
                 title={isSafeMode ? 'المشاهدة العائلية النظيفة مفعلة 🛡️' : 'تفعيل المشاهدة العائلية النظيفة'}
               >
-                <span>🛡️</span>
-                <span className="hidden sm:inline whitespace-nowrap">{isSafeMode ? 'المشاهدة النظيفة' : 'الوضع العائلي'}</span>
-                <span className={`w-2 h-2 rounded-full ${isSafeMode ? 'bg-orange-400 animate-pulse' : 'bg-gray-600'}`}></span>
+                <span className="text-xs sm:text-sm">🛡️</span>
+                <span className="hidden md:inline whitespace-nowrap">{isSafeMode ? 'المشاهدة النظيفة' : 'الوضع العائلي'}</span>
+                <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isSafeMode ? 'bg-orange-400 animate-pulse' : 'bg-gray-600'}`}></span>
               </button>
 
-              {/* مربع البحث الأنيق */}
-              <div className="relative w-28 sm:w-40 md:w-52">
+              {/* زر البحث للموبايل */}
+              <button
+                onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+                className="lg:hidden p-2 rounded-full bg-slate-900 border border-slate-800 text-orange-400 hover:text-white text-xs"
+                title="بحث"
+              >
+                🔍
+              </button>
+
+              {/* مربع البحث للأجهزة الأكبر */}
+              <div className="relative hidden lg:block w-44 xl:w-56">
                 <input
                   type="text"
                   value={searchQuery}
@@ -161,10 +185,10 @@ export default function Navbar({
                 )}
               </div>
 
-              {/* زر المفضلة */}
+              {/* زر المفضلة للكمبيوتر */}
               <button
                 onClick={() => handleSelectTab('watchlist')}
-                className={`relative p-2 rounded-full border transition-all ${
+                className={`relative hidden sm:flex p-2 rounded-full border transition-all ${
                   activeTab === 'watchlist' && !searchQuery
                     ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white border-orange-400 shadow-md shadow-orange-600/30'
                     : 'bg-slate-900/90 hover:bg-slate-800 text-gray-300 border-slate-800 hover:text-white'
@@ -183,11 +207,10 @@ export default function Navbar({
               <div className="relative">
                 <button
                   onClick={() => setLangMenuOpen(!langMenuOpen)}
-                  className="bg-slate-900/90 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded-full border border-slate-800 text-xs font-bold flex items-center gap-1 transition-all"
+                  className="bg-slate-900/90 hover:bg-slate-800 text-white px-2 py-1.5 sm:px-2.5 rounded-full border border-slate-800 text-xs font-bold flex items-center gap-1 transition-all"
                 >
-                  <span>{currentLang.flag}</span>
+                  <span className="text-sm">{currentLang.flag}</span>
                   <span className="hidden md:inline text-[11px] whitespace-nowrap">{currentLang.name}</span>
-                  <span className="text-[7px] text-gray-400">▼</span>
                 </button>
 
                 {langMenuOpen && (
@@ -227,7 +250,6 @@ export default function Navbar({
                       {currentUser.avatar || '🍿'}
                     </span>
                     <span className="hidden sm:inline max-w-[70px] truncate whitespace-nowrap">{currentUser.name}</span>
-                    <span className="text-[7px]">▼</span>
                   </button>
 
                   {userMenuOpen && (
@@ -306,54 +328,92 @@ export default function Navbar({
               ) : (
                 <button
                   onClick={onOpenAuth}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-400 text-white px-4 py-1.5 rounded-full text-xs font-black shadow-md shadow-orange-600/30 transition-all flex items-center gap-1 active:scale-95 whitespace-nowrap border border-orange-400/40"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-400 text-white px-2.5 py-1.5 sm:px-4 sm:py-1.5 rounded-full text-xs font-black shadow-md shadow-orange-600/30 transition-all flex items-center gap-1 active:scale-95 whitespace-nowrap border border-orange-400/40"
                 >
                   <span>👤</span>
-                  <span className="whitespace-nowrap">{t.login}</span>
+                  <span className="hidden sm:inline whitespace-nowrap">{t.login}</span>
                 </button>
               )}
 
             </div>
           </div>
 
-          {/* شريط الأقسام السريع للموبايل */}
-          <div className="flex lg:hidden items-center gap-1.5 overflow-x-auto pt-2 pb-0.5 scrollbar-none">
-            {navTabs.map((tab) => {
-              const isActive = activeTab === tab.id && !searchQuery;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleSelectTab(tab.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 flex items-center gap-1 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white font-black shadow-md shadow-orange-600/40'
-                      : 'bg-slate-900 text-gray-300 border border-slate-800 hover:text-white'
-                  }`}
-                >
-                  <span>{tab.icon}</span>
-                  <span className="whitespace-nowrap">{tab.label}</span>
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => setCategoriesModalOpen(true)}
-              className="px-3 py-1 rounded-full text-xs font-black text-orange-400 bg-orange-500/10 border border-orange-500/30 whitespace-nowrap shrink-0 flex items-center gap-1"
-            >
-              <span>✨</span>
-              <span className="whitespace-nowrap">{t.categories}</span>
-            </button>
-          </div>
+          {/* شريط البحث المنسدل للموبايل */}
+          {mobileSearchOpen && (
+            <div className="lg:hidden pt-2 pb-1 animate-fadeIn">
+              <div className="relative w-full">
+                <input
+                  type="text"
+                  autoFocus
+                  value={searchQuery}
+                  placeholder={t.searchPlaceholder}
+                  className="w-full pl-8 pr-9 py-2 rounded-2xl bg-slate-900 border border-orange-500/40 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 text-xs shadow-inner"
+                  onChange={(e) => onSearch(e.target.value)}
+                />
+                <span className="absolute right-3 top-2.5 text-orange-400 text-xs">🔍</span>
+                {searchQuery ? (
+                  <button
+                    onClick={() => onSearch('')}
+                    className="absolute left-3 top-2 text-gray-400 hover:text-white text-xs bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center"
+                  >
+                    ✕
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setMobileSearchOpen(false)}
+                    className="absolute left-3 top-2 text-gray-400 hover:text-white text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
         </div>
       </nav>
 
-      {/* نافذة التصنيفات الشاملة */}
+      {/* 2. شريط التنقل السفلي الاحترافي للهواتف (Mobile Bottom Navigation Bar) */}
+      <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-[#0c0e17]/95 backdrop-blur-2xl border-t border-orange-500/20 px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] shadow-2xl">
+        <div className="flex items-center justify-around">
+          {mobileBottomTabs.map((tab) => {
+            const isActive = activeTab === tab.id && !searchQuery;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleSelectTab(tab.id)}
+                className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                  isActive
+                    ? 'text-orange-400 font-black scale-105'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <span className="text-lg relative">
+                  {tab.icon}
+                  {tab.badge > 0 && (
+                    <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-black">
+                      {tab.badge}
+                    </span>
+                  )}
+                </span>
+                <span className="text-[10px] mt-0.5 tracking-tight font-bold">
+                  {tab.label}
+                </span>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-0.5"></span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. نافذة التصنيفات الشاملة */}
       {categoriesModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl animate-fadeIn">
           <div className="fixed inset-0" onClick={() => setCategoriesModalOpen(false)}></div>
 
-          <div className="relative w-full max-w-2xl bg-[#0f111a] border border-orange-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-[#0f111a] border border-orange-500/30 rounded-3xl p-5 sm:p-8 shadow-2xl z-10 max-h-[85vh] overflow-y-auto">
             <button
               onClick={() => setCategoriesModalOpen(false)}
               className="absolute top-4 left-4 bg-slate-800 hover:bg-slate-700 text-gray-400 hover:text-white rounded-full w-9 h-9 flex items-center justify-center text-sm transition-colors"
@@ -361,9 +421,9 @@ export default function Navbar({
               ✕
             </button>
 
-            <div className="text-center mb-6">
-              <span className="text-4xl mb-2 inline-block animate-bounce">✨</span>
-              <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-white">
+            <div className="text-center mb-5">
+              <span className="text-3xl sm:text-4xl mb-1.5 inline-block animate-bounce">✨</span>
+              <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-white">
                 {t.categories}
               </h2>
               <p className="text-gray-400 text-xs sm:text-sm mt-1">
@@ -371,14 +431,14 @@ export default function Navbar({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pb-4">
               {allCategories.map((cat) => {
                 const isActive = activeTab === cat.id && !searchQuery;
                 return (
                   <button
                     key={cat.id}
                     onClick={() => handleSelectTab(cat.id)}
-                    className={`p-3.5 rounded-2xl border text-right transition-all flex items-start gap-3 group relative overflow-hidden ${
+                    className={`p-3 sm:p-3.5 rounded-2xl border text-right transition-all flex items-start gap-3 group relative overflow-hidden ${
                       isActive
                         ? 'bg-gradient-to-r from-orange-600/30 to-amber-500/30 border-orange-500 shadow-lg shadow-orange-600/20'
                         : 'bg-slate-950/80 hover:bg-slate-900 border-slate-800 hover:border-orange-500/40'

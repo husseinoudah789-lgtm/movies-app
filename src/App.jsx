@@ -272,11 +272,11 @@ function App() {
       dir={t.dir}
     >
       {/* خلفيات التوهج المحيطي البرتقالية الفاخرة */}
-      <div className="fixed top-0 left-1/4 w-96 h-96 bg-orange-600/15 rounded-full filter blur-[150px] pointer-events-none -z-10"></div>
-      <div className="fixed top-1/3 right-10 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[150px] pointer-events-none -z-10"></div>
-      <div className="fixed bottom-10 left-10 w-96 h-96 bg-orange-700/10 rounded-full filter blur-[160px] pointer-events-none -z-10"></div>
+      <div className="fixed top-0 left-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-orange-600/15 rounded-full filter blur-[150px] pointer-events-none -z-10"></div>
+      <div className="fixed top-1/3 right-10 w-72 sm:w-96 h-72 sm:h-96 bg-amber-500/10 rounded-full filter blur-[150px] pointer-events-none -z-10"></div>
+      <div className="fixed bottom-10 left-10 w-72 sm:w-96 h-72 sm:h-96 bg-orange-700/10 rounded-full filter blur-[160px] pointer-events-none -z-10"></div>
 
-      {/* شريط التنقل العلوي بالثيم البرتقالي والأبيض */}
+      {/* شريط التنقل العلوي والسفلي للموبايل بالثيم البرتقالي والأبيض */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -294,22 +294,22 @@ function App() {
         onToggleSafeMode={handleToggleSafeMode}
       />
       
-      <main className="container mx-auto px-4 sm:px-6 py-5 max-w-7xl relative z-10">
+      <main className="container mx-auto px-3 sm:px-6 py-3 sm:py-5 max-w-7xl relative z-10 pb-24 lg:pb-12">
         {/* حالة البحث */}
         {searchQuery ? (
-          <section className="space-y-6 animate-fadeIn">
-            <div className="bg-[#0f111a]/80 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-orange-500/30 shadow-2xl">
-              <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
-                <span className="text-3xl">🔍</span>
+          <section className="space-y-4 sm:space-y-6 animate-fadeIn">
+            <div className="bg-[#0f111a]/80 backdrop-blur-xl p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-orange-500/30 shadow-2xl">
+              <h2 className="text-xl sm:text-3xl font-black text-white flex items-center gap-2 sm:gap-3">
+                <span className="text-2xl sm:text-3xl">🔍</span>
                 <span>{t.searchResultsFor} <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">"{searchQuery}"</span></span>
               </h2>
-              <p className="text-gray-300 text-xs sm:text-sm mt-1.5 font-medium">
+              <p className="text-gray-300 text-xs sm:text-sm mt-1 font-medium">
                 {searchResults.length} {t.foundResults}
               </p>
             </div>
 
             {searchResults.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-4">
                 {searchResults.map(item => (
                   <MovieCard 
                     key={item.id} 
@@ -323,24 +323,24 @@ function App() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-24 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-800 space-y-3">
-                <span className="text-6xl inline-block animate-bounce">🧐</span>
-                <p className="text-gray-300 text-lg font-bold">{t.noResults}</p>
+              <div className="text-center py-20 bg-slate-900/40 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-slate-800 space-y-2">
+                <span className="text-5xl inline-block animate-bounce">🧐</span>
+                <p className="text-gray-300 text-base font-bold">{t.noResults}</p>
               </div>
             )}
           </section>
         ) : activeTab === 'home' ? (
           /* الصفحة الرئيسية */
           loading ? (
-            <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
+            <div className="flex flex-col justify-center items-center h-[50vh] gap-3">
               <div className="relative">
-                <div className="w-20 h-20 rounded-full border-4 border-slate-800 border-t-orange-500 animate-spin"></div>
-                <span className="absolute inset-0 flex items-center justify-center text-2xl">🍿</span>
+                <div className="w-16 h-16 rounded-full border-4 border-slate-800 border-t-orange-500 animate-spin"></div>
+                <span className="absolute inset-0 flex items-center justify-center text-xl">🍿</span>
               </div>
-              <p className="text-orange-400 text-sm font-bold animate-pulse">{t.loading}</p>
+              <p className="text-orange-400 text-xs sm:text-sm font-bold animate-pulse">{t.loading}</p>
             </div>
           ) : (
-            <div className="space-y-10 animate-fadeIn">
+            <div className="space-y-8 sm:space-y-10 animate-fadeIn">
               {/* بانر البطل السينمائي الرئيسي */}
               <HeroSpotlight 
                 items={trending.length > 0 ? trending : movies} 
@@ -351,7 +351,7 @@ function App() {
               />
 
               {/* شريط التصنيفات السريع في الصفحة الرئيسية */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {homeSections.map((sec) => (
                   <button
                     key={sec.id}
@@ -359,7 +359,7 @@ function App() {
                       const el = document.getElementById(`section-${sec.id}`);
                       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }}
-                    className="px-3.5 py-1.5 rounded-full text-xs font-black whitespace-nowrap bg-[#0f111a]/90 hover:bg-orange-500/20 text-gray-200 hover:text-white border border-orange-500/20 hover:border-orange-500/50 transition-all flex items-center gap-1.5 shrink-0 shadow"
+                    className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-black whitespace-nowrap bg-[#0f111a]/90 hover:bg-orange-500/20 text-gray-200 hover:text-white border border-orange-500/20 hover:border-orange-500/50 transition-all flex items-center gap-1 shrink-0 shadow"
                   >
                     <span>{sec.icon}</span>
                     <span className="whitespace-nowrap">{sec.title.split(' ')[0]} {sec.title.split(' ')[1] || ''}</span>
@@ -368,7 +368,7 @@ function App() {
               </div>
 
               {/* صفوف الأقسام بتمرير أفقي سلس */}
-              <div className="space-y-10">
+              <div className="space-y-8 sm:space-y-10">
                 {homeSections.map((section) => (
                   <SectionRow
                     key={section.id}
@@ -474,8 +474,8 @@ function App() {
         appLang={appLang}
       />
 
-      {/* Footer الفاخر */}
-      <footer className="mt-24 border-t border-orange-500/20 bg-[#090a0f]/90 backdrop-blur-xl py-10 text-center text-xs sm:text-sm text-gray-400 relative">
+      {/* Footer الفاخر مع مراعاة شريط الموبايل السفلي */}
+      <footer className="mt-16 sm:mt-24 border-t border-orange-500/20 bg-[#090a0f]/90 backdrop-blur-xl py-8 sm:py-10 text-center text-xs sm:text-sm text-gray-400 relative mb-16 lg:mb-0">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🍿</span>
@@ -483,11 +483,11 @@ function App() {
               {t.appName}
             </span>
           </div>
-          <p className="text-gray-300">{t.footerText}</p>
-          <div className="flex items-center gap-4 text-orange-400 text-xs">
+          <p className="text-gray-300 text-xs sm:text-sm">{t.footerText}</p>
+          <div className="flex items-center gap-3 text-orange-400 text-xs">
             <span>🛡️ وضع المشاهدة النظيفة</span>
             <span>•</span>
-            <span>4K Ultra HD</span>
+            <span>📱 تطبيق ويب متجاوب</span>
             <span>•</span>
             <span>2026 VIP</span>
           </div>
