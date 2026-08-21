@@ -6,7 +6,8 @@ export default function MovieCard({
   onClick, 
   appLang = 'ar', 
   isFavorite = false, 
-  onToggleFavorite 
+  onToggleFavorite,
+  isSafeMode = true
 }) {
   const t = translations[appLang] || translations.ar;
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -53,14 +54,21 @@ export default function MovieCard({
           loading="lazy"
         />
 
-        {/* شارة جودة العمل (4K / HD) وشارة نوع العمل */}
+        {/* شارات العمل العلوية: النوع والدقة والوضع العائلي الآمن */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
           <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black backdrop-blur-md shadow-md ${badgeColor}`}>
             {mediaTypeText}
           </span>
-          <span className="bg-black/60 backdrop-blur-md text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded text-[9px] font-extrabold w-max">
-            HD
-          </span>
+          <div className="flex items-center gap-1">
+            <span className="bg-black/60 backdrop-blur-md text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded text-[9px] font-extrabold w-max">
+              HD
+            </span>
+            {isSafeMode && (
+              <span className="bg-emerald-950/80 backdrop-blur-md text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded text-[9px] font-extrabold flex items-center gap-0.5 shadow" title="أداة حذف وتخطي المشاهد غير اللائقة مفعلة">
+                <span>🛡️</span>
+              </span>
+            )}
+          </div>
         </div>
 
         {/* زر المفضلة التفاعلي السريع ❤️ */}
@@ -86,11 +94,16 @@ export default function MovieCard({
         {/* طبقة المعلومات المنبثقة عند تمرير الماوس (Hover Overlay) */}
         <div className="absolute inset-0 p-4 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 text-white bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/40 z-10">
           
-          {/* زر تشغيل متوهج بالمنتصف */}
-          <div className="flex justify-center pt-4">
-            <span className="w-12 h-12 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 text-white flex items-center justify-center shadow-xl shadow-red-600/50 transform group-hover:scale-110 transition-transform text-lg">
+          {/* زر تشغيل متوهج بالمنتصف مع إشارة الحماية */}
+          <div className="flex flex-col items-center justify-center pt-2 gap-1">
+            <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 text-white flex items-center justify-center shadow-xl shadow-red-600/50 transform group-hover:scale-110 transition-transform text-lg">
               ▶️
             </span>
+            {isSafeMode && (
+              <span className="text-[9px] text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                🛡️ المشاهدة النظيفة نشطة
+              </span>
+            )}
           </div>
 
           {/* الملخص ومعلومات العمل السريعة */}
@@ -114,7 +127,7 @@ export default function MovieCard({
 
       </div>
 
-      {/* معلومات البطاقة السفلية (العنوان والسنة) */}
+      {/* معلومات البطاقة السفلية */}
       <div className="p-3.5 flex-1 flex flex-col justify-between bg-slate-900/90 border-t border-slate-800/60">
         <div>
           <h3 

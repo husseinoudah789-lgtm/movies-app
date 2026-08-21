@@ -36,7 +36,7 @@ function App() {
   const [watchlist, setWatchlist] = useState([]);
   const [watchHistory, setWatchHistory] = useState([]);
 
-  // وضع المشاهدة العائلية النظيفة (حذف وتخطي المشاهد غير اللائقة)
+  // وضع المشاهدة العائلية النظيفة (حذف وتخطي المشاهد غير اللائقة الشامل)
   const [isSafeMode, setIsSafeMode] = useState(() => {
     const saved = localStorage.getItem('cinema_plus_safe_mode');
     return saved !== null ? saved === 'true' : true;
@@ -276,7 +276,7 @@ function App() {
       <div className="fixed top-1/3 right-10 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[140px] pointer-events-none -z-10"></div>
       <div className="fixed bottom-10 left-10 w-96 h-96 bg-indigo-600/10 rounded-full filter blur-[160px] pointer-events-none -z-10"></div>
 
-      {/* شريط التنقل العلوي المحسّن مع أداة المشاهدة النظيفة */}
+      {/* شريط التنقل العلوي مع أداة المشاهدة النظيفة لجميع الأعمال */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -318,6 +318,7 @@ function App() {
                     appLang={appLang}
                     isFavorite={watchlist.some((w) => w.id === item.id)}
                     onToggleFavorite={handleToggleFavorite}
+                    isSafeMode={isSafeMode}
                   />
                 ))}
               </div>
@@ -382,6 +383,7 @@ function App() {
                     appLang={appLang}
                     watchlist={watchlist}
                     onToggleFavorite={handleToggleFavorite}
+                    isSafeMode={isSafeMode}
                   />
                 ))}
               </div>
@@ -432,6 +434,7 @@ function App() {
               onToggleFavorite={handleToggleFavorite}
               onClearHistory={handleClearHistory}
               onClearWatchlist={handleClearWatchlist}
+              isSafeMode={isSafeMode}
             />
           </div>
         )}
@@ -482,7 +485,7 @@ function App() {
           </div>
           <p className="text-gray-400">{t.footerText}</p>
           <div className="flex items-center gap-4 text-gray-400 text-xs">
-            <span>🛡️ وضع المشاهدة النظيفة</span>
+            <span>🛡️ أداة حذف المشاهد غير اللائقة مفعلة لجميع الأعمال</span>
             <span>•</span>
             <span>4K Ultra HD</span>
             <span>•</span>

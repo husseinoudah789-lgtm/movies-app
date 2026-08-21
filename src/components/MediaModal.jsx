@@ -27,11 +27,12 @@ export default function MediaModal({
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [selectedLang, setSelectedLang] = useState(appLang === 'ar' ? 'ar' : 'en-US');
 
-  // أداة حذف وتخطي المشاهد غير اللائقة
+  // أداة حذف وتخطي المشاهد غير اللائقة الشاملة لجميع الأفلام والمسلسلات
   const [cleanWatchMode, setCleanWatchMode] = useState(true);
   const [isCensored, setIsCensored] = useState(false);
   const [skipNotification, setSkipNotification] = useState('');
   const [skipKeyOffset, setSkipKeyOffset] = useState(0);
+  const [totalSkippedSeconds, setTotalSkippedSeconds] = useState(0);
 
   const isTV = media.media_type === 'tv' || (!media.title && !!media.name);
   const mediaType = isTV ? 'tv' : 'movie';
@@ -62,24 +63,28 @@ export default function MediaModal({
     }
   }, [media?.id, selectedSeason, selectedEpisode]);
 
-  // اختصارات لوحة المفاتيح: Escape للإغلاق، B للتعتيم الفوري
+  // اختصارات لوحة المفاتيح: Escape للإغلاق، B أو المسافة للتعتيم الفوري، S للتخطي السريع
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
       if (e.key === 'b' || e.key === 'B') {
         setIsCensored((prev) => !prev);
       }
+      if (e.key === 's' || e.key === 'S') {
+        handleSkipScene(30);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // دالة تخطي المشهد السريع للأمام (+30 أو +60 ثانية)
+  // دالة تخطي المشهد السريع للأمام (+30 أو +60 ثانية) الشاملة لجميع الأعمال
   const handleSkipScene = (seconds = 30) => {
     setSkipKeyOffset((prev) => prev + 1);
+    setTotalSkippedSeconds((prev) => prev + seconds);
     setIsCensored(false);
-    setSkipNotification(`⚡ تم تخطي المشهد (+${seconds} ثانية للأمام بنجاح)`);
-    setTimeout(() => setSkipNotification(''), 3000);
+    setSkipNotification(`⚡ تم تخطي المشهد (+${seconds} ثانية للأمام بنجاح) 🛡️`);
+    setTimeout(() => setSkipNotification(''), 3500);
   };
 
   const trailer = details?.videos?.results?.find(
@@ -145,8 +150,8 @@ export default function MediaModal({
           <span className="group-hover:rotate-90 transition-transform duration-200">✕</span>
         </button>
 
-        {/* مشغل الفيديو مع طبقة التعتيم الفوري لحذف المشاهد السيئة */}
-        <div className="relative aspect-video w-full bg-black shadow-inner overflow-hidden">
+        {/* مشغل الفيديو مع لوحة التحكم العائمة لحذف وتعتيم المشاهد */}
+        <div className="relative aspect-video w-full bg-black shadow-inner overflow-hidden group/player">
           {/* إضاءة محيطية */}
           <div className="absolute inset-0 bg-red-600/10 filter blur-3xl pointer-events-none -z-10"></div>
           
@@ -166,9 +171,44 @@ export default function MediaModal({
             </div>
           )}
 
-          {/* طبقة التعتيم الفوري (Shield Censor Overlay) لحذف المشاهد غير اللائقة فوراً */}
+          {/* أزرار التحكم العائمة المباشرة فوق الفيديو (Floating In-Player Quick Bar) */}
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-700/80 shadow-2xl transition-opacity">
+            <span className="flex items-center gap-1.5 text-[11px] font-black text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="hidden sm:inline">أداة الفلترة والتخطي نشطة</span>
+              <span>🛡️</span>
+            </span>
+
+            <div className="h-3 w-px bg-slate-700 mx-1"></div>
+
+            {/* زر التعتيم المباشر فوق المشغل */}
+            <button
+              onClick={() => setIsCensored(!isCensored)}
+              className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all flex items-center gap-1 ${
+                isCensored 
+                  ? 'bg-amber-500 text-slate-950 shadow-md' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-amber-300'
+              }`}
+              title="تعتيم فوري للمشهد (اختصار B)"
+            >
+              <span>{isCensored ? '👁️' : '🙈'}</span>
+              <span className="hidden xs:inline">{isCensored ? 'إلغاء' : 'تعتيم'}</span>
+            </button>
+
+            {/* زر التخطي المباشر فوق المشغل */}
+            <button
+              onClick={() => handleSkipScene(30)}
+              className="px-2.5 py-1 rounded-xl text-[11px] font-black bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90 text-white shadow-md transition-all flex items-center gap-1"
+              title="تخطي 30 ثانية للأمام (اختصار S)"
+            >
+              <span>⏩</span>
+              <span>+30ث</span>
+            </button>
+          </div>
+
+          {/* طبقة التعتيم الفوري (Shield Censor Overlay) لحجب وتخطي المشهد غير اللائق */}
           {isCensored && (
-            <div className="absolute inset-0 z-20 backdrop-blur-3xl bg-slate-950/95 flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fadeIn">
+            <div className="absolute inset-0 z-30 backdrop-blur-3xl bg-slate-950/95 flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fadeIn">
               <div className="w-16 h-16 rounded-3xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-3xl shadow-xl shadow-amber-500/20 animate-bounce">
                 🙈
               </div>
@@ -178,8 +218,13 @@ export default function MediaModal({
                   {t.censorActive}
                 </h3>
                 <p className="text-gray-400 text-xs sm:text-sm">
-                  {t.safeModeDesc}
+                  تعمل أداة الحماية العائلية على حجب وتخطي المشاهد الحساسة لجميع الأفلام والمسلسلات.
                 </p>
+                {totalSkippedSeconds > 0 && (
+                  <p className="text-amber-400 text-xs font-bold pt-1">
+                    ⏱️ إجمالي ما تم تخطيه في هذا العمل: {totalSkippedSeconds} ثانية
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
@@ -191,8 +236,15 @@ export default function MediaModal({
                 </button>
 
                 <button
+                  onClick={() => handleSkipScene(60)}
+                  className="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm border border-slate-700 transition-all flex items-center gap-1.5"
+                >
+                  <span>{t.skipScene60}</span>
+                </button>
+
+                <button
                   onClick={() => setIsCensored(false)}
-                  className="bg-slate-800 hover:bg-slate-700 text-gray-200 hover:text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm border border-slate-700 transition-all flex items-center gap-1.5"
+                  className="bg-slate-900 hover:bg-slate-800 text-gray-200 hover:text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm border border-slate-700 transition-all flex items-center gap-1.5"
                 >
                   <span>{t.unblurScene}</span>
                 </button>
@@ -200,31 +252,32 @@ export default function MediaModal({
             </div>
           )}
 
-          {/* إشعار التخطي السريع */}
+          {/* إشعار التخطي السريع المؤقت */}
           {skipNotification && (
-            <div className="absolute top-4 inset-x-0 mx-auto max-w-sm bg-amber-500/90 text-slate-950 font-black px-4 py-2 rounded-xl text-xs text-center shadow-2xl backdrop-blur-md animate-fadeIn z-30">
-              {skipNotification}
+            <div className="absolute top-14 inset-x-0 mx-auto max-w-sm bg-gradient-to-r from-amber-500 to-red-600 text-white font-black px-4 py-2 rounded-xl text-xs text-center shadow-2xl backdrop-blur-md animate-fadeIn z-30 flex items-center justify-center gap-2">
+              <span>⚡</span>
+              <span>{skipNotification}</span>
             </div>
           )}
         </div>
 
-        {/* شريط أدوات حذف وتخطي المشاهد غير اللائقة (Clean Watch Bar) */}
+        {/* شريط أدوات حذف وتخطي المشاهد غير اللائقة الشامل */}
         <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-4 sm:px-6 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-lg">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setCleanWatchMode(!cleanWatchMode)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow ${
                 cleanWatchMode
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-600/30 scale-105'
                   : 'bg-slate-800 text-gray-400 hover:text-white'
               }`}
             >
               <span>🛡️</span>
-              <span>{cleanWatchMode ? t.safeModeActive : t.safeMode}</span>
+              <span>{cleanWatchMode ? 'المشاهدة النظيفة تعمل على هذا العمل 🛡️' : t.safeMode}</span>
             </button>
 
             <span className="hidden md:inline text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-              {isFamilySafeGenre ? t.familySafeBadge : 'تخطي المشاهد الحساسة مفعل'}
+              {isFamilySafeGenre ? t.familySafeBadge : 'فلترة المشاهد الحساسة لجميع السيرفرات'}
             </span>
           </div>
 
@@ -237,7 +290,7 @@ export default function MediaModal({
                   ? 'bg-amber-500 text-slate-950 border-amber-400 scale-105'
                   : 'bg-slate-800/90 hover:bg-slate-800 text-amber-300 border-amber-500/30'
               }`}
-              title="تعتيم الشاشة فوراً (اختصار: حرف B)"
+              title="تعتيم الشاشة فوراً وحجب المشهد (حرف B)"
             >
               <span>{isCensored ? '👁️' : '🙈'}</span>
               <span>{isCensored ? t.unblurScene : t.blurScene}</span>
@@ -373,7 +426,7 @@ export default function MediaModal({
                         setSelectedSeason(season.season_number);
                         setSelectedEpisode(1);
                       }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                         selectedSeason === season.season_number
                           ? 'bg-indigo-600 text-white shadow-md scale-105'
                           : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/50'

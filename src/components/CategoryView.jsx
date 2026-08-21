@@ -37,215 +37,195 @@ export default function CategoryView({
   watchHistory = [],
   onToggleFavorite,
   onClearHistory,
-  onClearWatchlist
+  onClearWatchlist,
+  isSafeMode = true
 }) {
   const t = translations[appLang] || translations.ar;
   
   // ضبط الفلتر الافتراضي حسب نوع القسم
   const getDefaultMediaFilter = (type) => {
-    if (type === 'movies' || type === 'arabic_movies' || type === 'upcoming' || type === 'docs') return 'movie';
-    if (type === 'tv' || type === 'arabic_tv' || type === 'kdrama') return 'tv';
+    if (type === 'movies' || type === 'arabic_movies' || type === 'upcoming' || type === 'action' || type === 'family' || type === 'top_rated' || type === 'docs') {
+      return 'movie';
+    }
+    if (type === 'tv' || type === 'arabic_tv' || type === 'anime' || type === 'kdrama') {
+      return 'tv';
+    }
     return 'all';
   };
 
-  const [mediaFilter, setMediaFilter] = useState(getDefaultMediaFilter(initialType));
+  const [mediaFilter, setMediaFilter] = useState(() => getDefaultMediaFilter(initialType));
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  const isLocalList = initialType === 'watchlist' || initialType === 'history';
+
+  // إعادة ضبط الحالة عند تغير القسم
   useEffect(() => {
     setMediaFilter(getDefaultMediaFilter(initialType));
     setSelectedGenre('all');
+    setPage(1);
   }, [initialType]);
 
-  const loadData = async (pageNumber = 1, isAppend = false) => {
-    if (pageNumber === 1) setLoading(true);
-    else setLoadingMore(true);
-
-    const genreObj = GENRE_CONFIG.find((g) => g.id === selectedGenre) || GENRE_CONFIG[0];
-    let combinedResults = [];
-
-    try {
-      if (initialType === 'watchlist') {
-        combinedResults = watchlist;
-      } else if (initialType === 'history') {
-        combinedResults = watchHistory;
-      } else if (initialType === 'arabic' || initialType === 'arabic_movies' || initialType === 'arabic_tv') {
-        if (initialType === 'arabic_movies' || mediaFilter === 'movie') {
-          const res = await fetchArabicContent('movie', pageNumber, appLang);
-          combinedResults = (res.results || []).map(i => ({ ...i, media_type: 'movie' }));
-        } else if (initialType === 'arabic_tv' || mediaFilter === 'tv') {
-          const res = await fetchArabicContent('tv', pageNumber, appLang);
-          combinedResults = (res.results || []).map(i => ({ ...i, media_type: 'tv' }));
-        } else {
-          // Both movies & TV
-          const [mRes, tRes] = await Promise.all([
-            fetchArabicContent('movie', pageNumber, appLang),
-            fetchArabicContent('tv', pageNumber, appLang)
-          ]);
-          const mList = (mRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
-          const tList = (tRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
-          combinedResults = interleave(mList, tList);
-        }
-      } else if (initialType === 'anime') {
-        if (mediaFilter === 'all') {
-          const [tvRes, movRes] = await Promise.all([
-            fetchAnimeContent('tv', pageNumber, appLang),
-            fetchAnimeContent('movie', pageNumber, appLang)
-          ]);
-          const tList = (tvRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
-          const mList = (movRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
-          combinedResults = interleave(tList, mList);
-        } else {
-          const res = await fetchAnimeContent(mediaFilter, pageNumber, appLang);
-          combinedResults = (res.results || []).map(i => ({ ...i, media_type: mediaFilter }));
-        }
-      } else if (initialType === 'kdrama') {
-        if (mediaFilter === 'all') {
-          const [tvRes, movRes] = await Promise.all([
-            fetchKDramaContent('tv', pageNumber, appLang),
-            fetchKDramaContent('movie', pageNumber, appLang)
-          ]);
-          const tList = (tvRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
-          const mList = (movRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
-          combinedResults = interleave(tList, mList);
-        } else {
-          const res = await fetchKDramaContent(mediaFilter, pageNumber, appLang);
-          combinedResults = (res.results || []).map(i => ({ ...i, media_type: mediaFilter }));
-        }
-      } else if (initialType === 'upcoming') {
-        const res = await fetchUpcomingMovies(pageNumber, appLang);
-        combinedResults = (res.results || []).map(i => ({ ...i, media_type: 'movie' }));
-      } else if (initialType === 'action') {
-        if (mediaFilter === 'all') {
-          const [mRes, tRes] = await Promise.all([
-            fetchActionContent('movie', pageNumber, appLang),
-            fetchActionContent('tv', pageNumber, appLang)
-          ]);
-          const mList = (mRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
-          const tList = (tRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
-          combinedResults = interleave(mList, tList);
-        } else {
-          const res = await fetchActionContent(mediaFilter, pageNumber, appLang);
-          combinedResults = (res.results || []).map(i => ({ ...i, media_type: mediaFilter }));
-        }
-      } else if (initialType === 'docs') {
-        if (mediaFilter === 'all') {
-          const [mRes, tRes] = await Promise.all([
-            fetchDocumentaries('movie', pageNumber, appLang),
-            fetchDocumentaries('tv', pageNumber, appLang)
-          ]);
-          const mList = (mRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
-          const tList = (tRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
-          combinedResults = interleave(mList, tList);
-        } else {
-          const res = await fetchDocumentaries(mediaFilter, pageNumber, appLang);
-          combinedResults = (res.results || []).map(i => ({ ...i, media_type: mediaFilter }));
-        }
-      } else if (initialType === 'family') {
-        if (mediaFilter === 'all') {
-          const [mRes, tRes] = await Promise.all([
-            fetchFamilyContent('movie', pageNumber, appLang),
-            fetchFamilyContent('tv', pageNumber, appLang),
-          ]);
-          const mList = (mRes.results || []).map(item => ({ ...item, media_type: 'movie' }));
-          const tList = (tRes.results || []).map(item => ({ ...item, media_type: 'tv' }));
-          combinedResults = interleave(mList, tList);
-        } else {
-          const res = await fetchFamilyContent(mediaFilter, pageNumber, appLang);
-          combinedResults = (res.results || []).map(item => ({ ...item, media_type: mediaFilter }));
-        }
-      } else if (initialType === 'top_rated') {
-        if (mediaFilter === 'all') {
-          const [mRes, tRes] = await Promise.all([
-            fetchTopRated('movie', pageNumber, appLang),
-            fetchTopRated('tv', pageNumber, appLang),
-          ]);
-          const mList = (mRes.results || []).map(item => ({ ...item, media_type: 'movie' }));
-          const tList = (tRes.results || []).map(item => ({ ...item, media_type: 'tv' }));
-          combinedResults = interleave(mList, tList);
-        } else {
-          const res = await fetchTopRated(mediaFilter, pageNumber, appLang);
-          combinedResults = (res.results || []).map(item => ({ ...item, media_type: mediaFilter }));
-        }
-      } else {
-        // Movies or TV default view
-        if (selectedGenre === 'all') {
-          if (mediaFilter === 'all') {
-            const [mRes, tRes] = await Promise.all([
-              fetchPopularMovies(pageNumber, appLang),
-              fetchPopularTVShows(pageNumber, appLang),
-            ]);
-            const mList = (mRes.results || []).map(item => ({ ...item, media_type: 'movie' }));
-            const tList = (tRes.results || []).map(item => ({ ...item, media_type: 'tv' }));
-            combinedResults = interleave(mList, tList);
-          } else if (mediaFilter === 'movie') {
-            const res = await fetchPopularMovies(pageNumber, appLang);
-            combinedResults = (res.results || []).map(item => ({ ...item, media_type: 'movie' }));
-          } else {
-            const res = await fetchPopularTVShows(pageNumber, appLang);
-            combinedResults = (res.results || []).map(item => ({ ...item, media_type: 'tv' }));
-          }
-        } else {
-          if (mediaFilter === 'all') {
-            const [mRes, tRes] = await Promise.all([
-              genreObj.movieGenre ? fetchByGenre('movie', genreObj.movieGenre, pageNumber, appLang) : { results: [] },
-              genreObj.tvGenre ? fetchByGenre('tv', genreObj.tvGenre, pageNumber, appLang) : { results: [] },
-            ]);
-            const mList = (mRes.results || []).map(item => ({ ...item, media_type: 'movie' }));
-            const tList = (tRes.results || []).map(item => ({ ...item, media_type: 'tv' }));
-            combinedResults = interleave(mList, tList);
-          } else if (mediaFilter === 'movie') {
-            if (genreObj.movieGenre) {
-              const res = await fetchByGenre('movie', genreObj.movieGenre, pageNumber, appLang);
-              combinedResults = (res.results || []).map(item => ({ ...item, media_type: 'movie' }));
-            }
-          } else {
-            if (genreObj.tvGenre) {
-              const res = await fetchByGenre('tv', genreObj.tvGenre, pageNumber, appLang);
-              combinedResults = (res.results || []).map(item => ({ ...item, media_type: 'tv' }));
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching data:', err);
-    }
-
-    if (isAppend) {
-      setItems(prev => [...prev, ...combinedResults]);
-    } else {
-      setItems(combinedResults);
-    }
-
-    setLoading(false);
-    setLoadingMore(false);
-  };
-
-  const interleave = (arr1, arr2) => {
-    const result = [];
-    const maxLen = Math.max(arr1.length, arr2.length);
-    for (let i = 0; i < maxLen; i++) {
-      if (i < arr1.length) result.push(arr1[i]);
-      if (i < arr2.length) result.push(arr2[i]);
-    }
-    return result;
-  };
-
+  // جلب البيانات
   useEffect(() => {
-    setPage(1);
-    loadData(1, false);
-  }, [initialType, mediaFilter, selectedGenre, appLang, watchlist, watchHistory]);
+    if (isLocalList) {
+      const source = initialType === 'watchlist' ? watchlist : watchHistory;
+      let filtered = [...source];
+      if (mediaFilter === 'movie') {
+        filtered = filtered.filter((i) => i.media_type === 'movie' || (!i.media_type && i.title));
+      } else if (mediaFilter === 'tv') {
+        filtered = filtered.filter((i) => i.media_type === 'tv' || (!i.media_type && i.name));
+      }
+      setItems(filtered);
+      setLoading(false);
+      return;
+    }
 
-  const handleLoadMore = () => {
+    const loadCategoryData = async () => {
+      setLoading(true);
+      try {
+        let results = [];
+        const activeGenreObj = GENRE_CONFIG.find((g) => g.id === selectedGenre);
+
+        if (initialType === 'arabic' || initialType === 'arabic_movies' || initialType === 'arabic_tv') {
+          const typeToFetch = initialType === 'arabic_movies' ? 'movie' : initialType === 'arabic_tv' ? 'tv' : mediaFilter === 'all' ? 'movie' : mediaFilter;
+          const data = await fetchArabicContent(typeToFetch, 1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+
+          if (initialType === 'arabic' && mediaFilter === 'all') {
+            const tvData = await fetchArabicContent('tv', 1, appLang);
+            const tvItems = (tvData.results || []).map((i) => ({ ...i, media_type: 'tv' }));
+            results = [...results, ...tvItems];
+          }
+        } else if (initialType === 'anime') {
+          const typeToFetch = mediaFilter === 'movie' ? 'movie' : 'tv';
+          const data = await fetchAnimeContent(typeToFetch, 1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+        } else if (initialType === 'kdrama') {
+          const typeToFetch = mediaFilter === 'movie' ? 'movie' : 'tv';
+          const data = await fetchKDramaContent(typeToFetch, 1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+        } else if (initialType === 'action') {
+          const typeToFetch = mediaFilter === 'tv' ? 'tv' : 'movie';
+          const data = await fetchActionContent(typeToFetch, 1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+        } else if (initialType === 'upcoming') {
+          const data = await fetchUpcomingMovies(1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: 'movie' }));
+        } else if (initialType === 'family') {
+          const typeToFetch = mediaFilter === 'tv' ? 'tv' : 'movie';
+          const data = await fetchFamilyContent(typeToFetch, 1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+        } else if (initialType === 'top_rated') {
+          const typeToFetch = mediaFilter === 'tv' ? 'tv' : 'movie';
+          const data = await fetchTopRated(typeToFetch, 1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+        } else if (initialType === 'docs') {
+          const typeToFetch = mediaFilter === 'tv' ? 'tv' : 'movie';
+          const data = await fetchDocumentaries(typeToFetch, 1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+        } else if (selectedGenre !== 'all' && activeGenreObj) {
+          if (mediaFilter === 'movie' || mediaFilter === 'all') {
+            const data = await fetchByGenre('movie', activeGenreObj.movieGenre, 1, appLang);
+            results = (data.results || []).map((i) => ({ ...i, media_type: 'movie' }));
+          } else if (mediaFilter === 'tv') {
+            const data = await fetchByGenre('tv', activeGenreObj.tvGenre, 1, appLang);
+            results = (data.results || []).map((i) => ({ ...i, media_type: 'tv' }));
+          }
+        } else if (mediaFilter === 'movie' || initialType === 'movies') {
+          const data = await fetchPopularMovies(1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: 'movie' }));
+        } else if (mediaFilter === 'tv' || initialType === 'tv') {
+          const data = await fetchPopularTVShows(1, appLang);
+          results = (data.results || []).map((i) => ({ ...i, media_type: 'tv' }));
+        } else {
+          const [m, tData] = await Promise.all([
+            fetchPopularMovies(1, appLang),
+            fetchPopularTVShows(1, appLang),
+          ]);
+          const mList = (m.results || []).map((i) => ({ ...i, media_type: 'movie' }));
+          const tList = (tData.results || []).map((i) => ({ ...i, media_type: 'tv' }));
+          results = [...mList, ...tList];
+        }
+
+        setItems(results);
+      } catch (err) {
+        console.error('Error loading category data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategoryData();
+  }, [initialType, mediaFilter, selectedGenre, page, isLocalList, appLang, watchlist, watchHistory]);
+
+  // تحميل المزيد
+  const handleLoadMore = async () => {
+    if (isLocalList) return;
+    setLoadingMore(true);
     const nextPage = page + 1;
-    setPage(nextPage);
-    loadData(nextPage, true);
-  };
+    try {
+      let nextResults = [];
+      const activeGenreObj = GENRE_CONFIG.find((g) => g.id === selectedGenre);
 
-  const isLocalList = initialType === 'watchlist' || initialType === 'history';
+      if (initialType.startsWith('arabic')) {
+        const typeToFetch = initialType === 'arabic_movies' ? 'movie' : initialType === 'arabic_tv' ? 'tv' : mediaFilter === 'all' ? 'movie' : mediaFilter;
+        const data = await fetchArabicContent(typeToFetch, nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+      } else if (initialType === 'anime') {
+        const typeToFetch = mediaFilter === 'movie' ? 'movie' : 'tv';
+        const data = await fetchAnimeContent(typeToFetch, nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+      } else if (initialType === 'kdrama') {
+        const typeToFetch = mediaFilter === 'movie' ? 'movie' : 'tv';
+        const data = await fetchKDramaContent(typeToFetch, nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+      } else if (initialType === 'action') {
+        const typeToFetch = mediaFilter === 'tv' ? 'tv' : 'movie';
+        const data = await fetchActionContent(typeToFetch, nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+      } else if (initialType === 'upcoming') {
+        const data = await fetchUpcomingMovies(nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: 'movie' }));
+      } else if (initialType === 'family') {
+        const typeToFetch = mediaFilter === 'tv' ? 'tv' : 'movie';
+        const data = await fetchFamilyContent(typeToFetch, nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+      } else if (initialType === 'top_rated') {
+        const typeToFetch = mediaFilter === 'tv' ? 'tv' : 'movie';
+        const data = await fetchTopRated(typeToFetch, nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+      } else if (initialType === 'docs') {
+        const typeToFetch = mediaFilter === 'tv' ? 'tv' : 'movie';
+        const data = await fetchDocumentaries(typeToFetch, nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: typeToFetch }));
+      } else if (selectedGenre !== 'all' && activeGenreObj) {
+        if (mediaFilter === 'movie' || mediaFilter === 'all') {
+          const data = await fetchByGenre('movie', activeGenreObj.movieGenre, nextPage, appLang);
+          nextResults = (data.results || []).map((i) => ({ ...i, media_type: 'movie' }));
+        } else if (mediaFilter === 'tv') {
+          const data = await fetchByGenre('tv', activeGenreObj.tvGenre, nextPage, appLang);
+          nextResults = (data.results || []).map((i) => ({ ...i, media_type: 'tv' }));
+        }
+      } else if (mediaFilter === 'movie' || initialType === 'movies') {
+        const data = await fetchPopularMovies(nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: 'movie' }));
+      } else if (mediaFilter === 'tv' || initialType === 'tv') {
+        const data = await fetchPopularTVShows(nextPage, appLang);
+        nextResults = (data.results || []).map((i) => ({ ...i, media_type: 'tv' }));
+      }
+
+      setItems((prev) => [...prev, ...nextResults]);
+      setPage(nextPage);
+    } catch (err) {
+      console.error('Error loading more:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -320,20 +300,23 @@ export default function CategoryView({
         )}
       </div>
 
-      {/* تصنيفات الأنواع (في الأقسام العامة فقط) */}
-      {!isLocalList && initialType !== 'upcoming' && initialType !== 'anime' && initialType !== 'kdrama' && initialType !== 'docs' && !initialType.startsWith('arabic') && (
+      {/* شريط التصنيفات (Genres) */}
+      {!isLocalList && !initialType.startsWith('arabic') && initialType !== 'anime' && initialType !== 'kdrama' && initialType !== 'action' && initialType !== 'upcoming' && initialType !== 'family' && initialType !== 'top_rated' && initialType !== 'docs' && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {GENRE_CONFIG.map((g) => (
+          {GENRE_CONFIG.map((genre) => (
             <button
-              key={g.id}
-              onClick={() => setSelectedGenre(g.id)}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-                selectedGenre === g.id
-                  ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 scale-105'
-                  : 'bg-slate-900/80 text-gray-300 hover:bg-slate-800 hover:text-white border border-slate-800'
+              key={genre.id}
+              onClick={() => {
+                setSelectedGenre(genre.id);
+                setPage(1);
+              }}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                selectedGenre === genre.id
+                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
+                  : 'bg-slate-900/90 text-gray-300 hover:bg-slate-800 border border-slate-800'
               }`}
             >
-              {t.genres[g.key] || g.id}
+              <span>{t.genres[genre.key]}</span>
             </button>
           ))}
         </div>
@@ -356,6 +339,7 @@ export default function CategoryView({
                 appLang={appLang}
                 isFavorite={watchlist.some((w) => w.id === item.id)}
                 onToggleFavorite={onToggleFavorite}
+                isSafeMode={isSafeMode}
               />
             ))}
           </div>

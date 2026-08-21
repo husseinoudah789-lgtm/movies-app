@@ -13,7 +13,8 @@ export default function SectionRow({
   onBrowseAll,
   appLang = 'ar',
   watchlist = [],
-  onToggleFavorite 
+  onToggleFavorite,
+  isSafeMode = true
 }) {
   const rowRef = useRef(null);
   const t = translations[appLang] || translations.ar;
@@ -84,6 +85,7 @@ export default function SectionRow({
                 appLang={appLang}
                 isFavorite={watchlist.some((w) => w.id === item.id)}
                 onToggleFavorite={onToggleFavorite}
+                isSafeMode={isSafeMode}
               />
             </div>
           ))}
