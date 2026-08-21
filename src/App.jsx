@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import HeroSpotlight from './components/HeroSpotlight';
 import MovieCard from './components/MovieCard';
+import SectionRow from './components/SectionRow';
 import CategoryView from './components/CategoryView';
 import MediaModal from './components/MediaModal';
 import AuthModal from './components/AuthModal';
@@ -221,6 +222,11 @@ function App() {
     localStorage.removeItem(storageKey);
   };
 
+  const handleBrowseSection = (tabTarget) => {
+    setActiveTab(tabTarget);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // أقسام الصفحة الرئيسية
   const homeSections = [
     ...(watchHistory.length > 0 ? [{
@@ -250,12 +256,12 @@ function App() {
       className="min-h-screen bg-[#030712] text-slate-100 font-sans selection:bg-red-600 selection:text-white transition-all duration-300 relative overflow-x-hidden" 
       dir={t.dir}
     >
-      {/* خلفيات التوهج المحيطي الجمالية (Ambient Glows) */}
+      {/* خلفيات التوهج المحيطي */}
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full filter blur-[140px] pointer-events-none -z-10"></div>
       <div className="fixed top-1/3 right-10 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[140px] pointer-events-none -z-10"></div>
       <div className="fixed bottom-10 left-10 w-96 h-96 bg-indigo-600/10 rounded-full filter blur-[160px] pointer-events-none -z-10"></div>
 
-      {/* شريط التنقل العلوي الفاخر */}
+      {/* شريط التنقل العلوي المحسّن */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -271,7 +277,7 @@ function App() {
         historyCount={watchHistory.length}
       />
       
-      <main className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl relative z-10">
+      <main className="container mx-auto px-4 sm:px-6 py-5 max-w-7xl relative z-10">
         {/* حالة البحث */}
         {searchQuery ? (
           <section className="space-y-6 animate-fadeIn">
@@ -286,7 +292,7 @@ function App() {
             </div>
 
             {searchResults.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4">
                 {searchResults.map(item => (
                   <MovieCard 
                     key={item.id} 
@@ -316,8 +322,8 @@ function App() {
               <p className="text-gray-400 text-sm font-bold animate-pulse">{t.loading}</p>
             </div>
           ) : (
-            <div className="space-y-12 animate-fadeIn">
-              {/* بانر البطل السينمائي (Hero Spotlight) */}
+            <div className="space-y-10 animate-fadeIn">
+              {/* بانر البطل السينمائي الرئيسي */}
               <HeroSpotlight 
                 items={trending.length > 0 ? trending : movies} 
                 onSelectMedia={(selected) => setSelectedMedia(selected)}
@@ -326,45 +332,42 @@ function App() {
                 onToggleFavorite={handleToggleFavorite}
               />
 
-              {/* أقسام الصفحة الرئيسية */}
-              {homeSections.map((section) => (
-                <section key={section.id} className="space-y-4">
-                  <div className="flex justify-between items-center bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-slate-900/40 backdrop-blur-xl px-5 py-3.5 rounded-2xl border border-slate-800/80 shadow-lg">
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white flex items-center gap-2.5">
-                      <span className="text-2xl p-1.5 rounded-xl bg-slate-800/60 border border-slate-700/50">{section.icon}</span>
-                      <span>{section.title}</span>
-                    </h2>
-                    {section.tabTarget !== 'home' && (
-                      <button
-                        onClick={() => {
-                          setActiveTab(section.tabTarget);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="text-amber-400 hover:text-white bg-slate-800/80 hover:bg-gradient-to-r hover:from-red-600 hover:to-amber-600 px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 shadow border border-slate-700/60"
-                      >
-                        <span>{t.browseSection}</span>
-                        <span>{t.dir === 'rtl' ? '←' : '→'}</span>
-                      </button>
-                    )}
-                  </div>
+              {/* شريط التصنيفات السريع في الصفحة الرئيسية (Category Quick Chips) */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                {homeSections.map((sec) => (
+                  <button
+                    key={sec.id}
+                    onClick={() => {
+                      const el = document.getElementById(`section-${sec.id}`);
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }}
+                    className="px-3.5 py-1.5 rounded-full text-xs font-black whitespace-nowrap bg-slate-900/80 hover:bg-slate-800 text-gray-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all flex items-center gap-1.5 shrink-0 shadow"
+                  >
+                    <span>{sec.icon}</span>
+                    <span className="whitespace-nowrap">{sec.title.split(' ')[0]} {sec.title.split(' ')[1] || ''}</span>
+                  </button>
+                ))}
+              </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-5">
-                    {section.data.slice(0, 6).map((item) => (
-                      <MovieCard 
-                        key={`${item.id}-${section.id}`} 
-                        item={{
-                          ...item, 
-                          media_type: section.mediaType || item.media_type
-                        }} 
-                        onClick={(selected) => setSelectedMedia(selected)}
-                        appLang={appLang}
-                        isFavorite={watchlist.some((w) => w.id === item.id)}
-                        onToggleFavorite={handleToggleFavorite}
-                      />
-                    ))}
-                  </div>
-                </section>
-              ))}
+              {/* صفوف الأقسام بتمرير أفقي سلس (Netflix / Shahid Row Style) */}
+              <div className="space-y-10">
+                {homeSections.map((section) => (
+                  <SectionRow
+                    key={section.id}
+                    id={section.id}
+                    title={section.title}
+                    icon={section.icon}
+                    data={section.data}
+                    mediaType={section.mediaType}
+                    tabTarget={section.tabTarget}
+                    onSelectMedia={(selected) => setSelectedMedia(selected)}
+                    onBrowseAll={handleBrowseSection}
+                    appLang={appLang}
+                    watchlist={watchlist}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
+                ))}
+              </div>
             </div>
           )
         ) : (
@@ -451,7 +454,7 @@ function App() {
         appLang={appLang}
       />
 
-      {/* Footer الفاخر مع توهج سفلي */}
+      {/* Footer الفاخر */}
       <footer className="mt-24 border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-xl py-10 text-center text-xs sm:text-sm text-gray-500 relative">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
