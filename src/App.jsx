@@ -12,6 +12,7 @@ import {
   fetchPopularTVShows, 
   fetchFamilyContent, 
   fetchTopRated, 
+  fetchArabicContent,
   fetchAnimeContent,
   fetchKDramaContent,
   fetchUpcomingMovies,
@@ -38,6 +39,8 @@ function App() {
 
   // بيانات الأقسام الرئيسية
   const [trending, setTrending] = useState([]);
+  const [arabicMovies, setArabicMovies] = useState([]);
+  const [arabicTV, setArabicTV] = useState([]);
   const [movies, setMovies] = useState([]);
   const [tvShows, setTvShows] = useState([]);
   const [anime, setAnime] = useState([]);
@@ -84,6 +87,8 @@ function App() {
       try {
         const [
           trendingData, 
+          arabicMoviesData,
+          arabicTVData,
           moviesData, 
           tvData, 
           animeData,
@@ -95,6 +100,8 @@ function App() {
           docsData
         ] = await Promise.all([
           fetchTrending(1, appLang),
+          fetchArabicContent('movie', 1, appLang),
+          fetchArabicContent('tv', 1, appLang),
           fetchPopularMovies(1, appLang),
           fetchPopularTVShows(1, appLang),
           fetchAnimeContent('tv', 1, appLang),
@@ -107,6 +114,8 @@ function App() {
         ]);
 
         setTrending(trendingData.results || []);
+        setArabicMovies(arabicMoviesData.results || []);
+        setArabicTV(arabicTVData.results || []);
         setMovies(moviesData.results || []);
         setTvShows(tvData.results || []);
         setAnime(animeData.results || []);
@@ -193,7 +202,7 @@ function App() {
   // إضافة عمل إلى سجل المشاهدات تلقائياً
   const handleAddToHistory = (item) => {
     const filtered = watchHistory.filter((h) => h.id !== item.id);
-    const updated = [item, ...filtered].slice(0, 30); // حفظ آخر 30 عمل
+    const updated = [item, ...filtered].slice(0, 30);
     setWatchHistory(updated);
 
     const storageKey = currentUser
@@ -222,6 +231,8 @@ function App() {
       mediaType: null
     }] : []),
     { id: 'trending', tabTarget: 'home', title: t.sections.trending, icon: '🔥', data: trending, mediaType: null },
+    { id: 'arabic_movies', tabTarget: 'arabic_movies', title: t.sections.arabicMovies, icon: '🇪🇬', data: arabicMovies, mediaType: 'movie' },
+    { id: 'arabic_tv', tabTarget: 'arabic_tv', title: t.sections.arabicTV, icon: '📺', data: arabicTV, mediaType: 'tv' },
     { id: 'movies', tabTarget: 'movies', title: t.sections.movies, icon: '🎬', data: movies, mediaType: 'movie' },
     { id: 'tv', tabTarget: 'tv', title: t.sections.tv, icon: '📺', data: tvShows, mediaType: 'tv' },
     { id: 'anime', tabTarget: 'anime', title: t.sections.anime, icon: '🎌', data: anime, mediaType: 'tv' },
@@ -342,6 +353,9 @@ function App() {
           <CategoryView 
             initialType={activeTab} 
             title={
+              activeTab === 'arabic' ? t.arabic :
+              activeTab === 'arabic_movies' ? t.arabicMovies :
+              activeTab === 'arabic_tv' ? t.arabicTV :
               activeTab === 'movies' ? t.movies :
               activeTab === 'tv' ? t.tv :
               activeTab === 'anime' ? t.anime :
@@ -356,6 +370,8 @@ function App() {
               t.appName
             } 
             icon={
+              activeTab === 'arabic' || activeTab === 'arabic_movies' ? '🇪🇬' :
+              activeTab === 'arabic_tv' ? '📺' :
               activeTab === 'movies' ? '🎬' :
               activeTab === 'tv' ? '📺' :
               activeTab === 'anime' ? '🎌' :

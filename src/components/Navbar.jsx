@@ -22,13 +22,14 @@ export default function Navbar({
 
   const primaryTabs = [
     { id: 'home', label: t.home, icon: '🏠' },
+    { id: 'arabic', label: t.arabic, icon: '🇪🇬' },
     { id: 'movies', label: t.movies, icon: '🎬' },
     { id: 'tv', label: t.tv, icon: '📺' },
     { id: 'anime', label: t.anime, icon: '🎌' },
-    { id: 'kdrama', label: t.kdrama, icon: '🎎' },
   ];
 
   const secondaryTabs = [
+    { id: 'kdrama', label: t.kdrama, icon: '🎎' },
     { id: 'action', label: t.action, icon: '💥' },
     { id: 'upcoming', label: t.upcoming, icon: '🍿' },
     { id: 'top_rated', label: t.topRated, icon: '⭐' },
@@ -55,7 +56,7 @@ export default function Navbar({
       <div className="container mx-auto px-4 py-2.5">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           
-          {/* الشعار واختيار اللغة وتسجيل الدخول */}
+          {/* الشعار واختيار اللغة والمفضلة والمستخدم */}
           <div className="flex items-center justify-between w-full lg:w-auto gap-3">
             <div 
               className="flex items-center gap-2 cursor-pointer select-none group"
@@ -70,7 +71,7 @@ export default function Navbar({
               </div>
             </div>
 
-            {/* أدوات الزاوية: اللغة + المفضلة + المستخدم */}
+            {/* أدوات الزاوية: المفضلة + اللغة + المستخدم */}
             <div className="flex items-center gap-2">
               
               {/* زر المفضلة السريع */}
@@ -226,7 +227,7 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* شريط الأقسام المباشرة + القائمة المنسدلة للأقسام الإضافية */}
+          {/* شريط الأقسام المباشرة + القائمة المنسدلة */}
           <div className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto py-1 scrollbar-none justify-start lg:justify-center">
             {primaryTabs.map((tab) => (
               <button

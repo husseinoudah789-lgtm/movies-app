@@ -7,6 +7,7 @@ import {
   fetchByGenre, 
   fetchFamilyContent, 
   fetchTopRated,
+  fetchArabicContent,
   fetchAnimeContent,
   fetchKDramaContent,
   fetchUpcomingMovies,
@@ -42,8 +43,8 @@ export default function CategoryView({
   
   // ضبط الفلتر الافتراضي حسب نوع القسم
   const getDefaultMediaFilter = (type) => {
-    if (type === 'movies' || type === 'upcoming' || type === 'docs') return 'movie';
-    if (type === 'tv' || type === 'kdrama') return 'tv';
+    if (type === 'movies' || type === 'arabic_movies' || type === 'upcoming' || type === 'docs') return 'movie';
+    if (type === 'tv' || type === 'arabic_tv' || type === 'kdrama') return 'tv';
     return 'all';
   };
 
@@ -71,6 +72,23 @@ export default function CategoryView({
         combinedResults = watchlist;
       } else if (initialType === 'history') {
         combinedResults = watchHistory;
+      } else if (initialType === 'arabic' || initialType === 'arabic_movies' || initialType === 'arabic_tv') {
+        if (initialType === 'arabic_movies' || mediaFilter === 'movie') {
+          const res = await fetchArabicContent('movie', pageNumber, appLang);
+          combinedResults = (res.results || []).map(i => ({ ...i, media_type: 'movie' }));
+        } else if (initialType === 'arabic_tv' || mediaFilter === 'tv') {
+          const res = await fetchArabicContent('tv', pageNumber, appLang);
+          combinedResults = (res.results || []).map(i => ({ ...i, media_type: 'tv' }));
+        } else {
+          // Both movies & TV
+          const [mRes, tRes] = await Promise.all([
+            fetchArabicContent('movie', pageNumber, appLang),
+            fetchArabicContent('tv', pageNumber, appLang)
+          ]);
+          const mList = (mRes.results || []).map(i => ({ ...i, media_type: 'movie' }));
+          const tList = (tRes.results || []).map(i => ({ ...i, media_type: 'tv' }));
+          combinedResults = interleave(mList, tList);
+        }
       } else if (initialType === 'anime') {
         if (mediaFilter === 'all') {
           const [tvRes, movRes] = await Promise.all([
@@ -268,7 +286,7 @@ export default function CategoryView({
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              {t.moviesOnly}
+              {initialType.startsWith('arabic') ? t.arabicMovies : t.moviesOnly}
             </button>
             <button
               onClick={() => setMediaFilter('tv')}
@@ -278,7 +296,7 @@ export default function CategoryView({
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              {t.tvOnly}
+              {initialType.startsWith('arabic') ? t.arabicTV : t.tvOnly}
             </button>
           </div>
         )}
@@ -303,7 +321,7 @@ export default function CategoryView({
       </div>
 
       {/* تصنيفات الأنواع (في الأقسام العامة فقط) */}
-      {!isLocalList && initialType !== 'upcoming' && initialType !== 'anime' && initialType !== 'kdrama' && initialType !== 'docs' && (
+      {!isLocalList && initialType !== 'upcoming' && initialType !== 'anime' && initialType !== 'kdrama' && initialType !== 'docs' && !initialType.startsWith('arabic') && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {GENRE_CONFIG.map((g) => (
             <button
